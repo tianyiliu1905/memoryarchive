@@ -1,0 +1,45 @@
+.dive {
+  position: fixed;
+  inset: 0;
+  z-index: 700;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.dive__blob {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  margin: -20px 0 0 -20px;
+  border-radius: 50%;
+  will-change: transform, opacity, filter;
+}
+
+.dive__flash {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+}
+
+.dive__streak {
+  position: absolute;
+  transform-origin: 0 50%;
+  border-radius: 2px;
+  filter: blur(0.4px);
+  will-change: transform, width, opacity;
+}
+
+.dive__bleed {
+  position: absolute;
+  inset: 0;
+  mix-blend-mode: multiply;
+}
+
+.dive__marker {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--ink-soft);
+  white-space: nowrap;
+}

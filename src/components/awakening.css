@@ -1,0 +1,46 @@
+.awakening {
+  position: fixed;
+  inset: 0;
+  z-index: 800;
+  background: var(--paper);
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.awakening__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.awakening__id {
+  letter-spacing: 0.32em;
+  color: var(--ink-faint);
+}
+
+.awakening__line {
+  width: 46px;
+  height: 1px;
+  background: var(--ink-ghost);
+  animation: line-breathe 2.4s ease-in-out infinite;
+}
+
+@keyframes line-breathe {
+  0%,
+  100% {
+    transform: scaleX(0.3);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+.awakening__note {
+  font-size: 13px;
+  color: var(--ink-ghost);
+  letter-spacing: 0.04em;
+}

@@ -1,0 +1,223 @@
+/* ============================================================
+   ALIX'S MEMORY ARCHIVE — global visual system
+   白纸、留白、荧光三色、缓慢显影
+   ============================================================ */
+
+:root {
+  /* ---- paper ---- */
+  --paper: #f7f6f3;
+  --paper-warm: #f2f0ea;
+  --paper-deep: #ebe8e0;
+
+  /* ---- ink ---- */
+  --ink: #16151a;
+  --ink-soft: rgba(22, 21, 26, 0.62);
+  --ink-faint: rgba(22, 21, 26, 0.34);
+  --ink-ghost: rgba(22, 21, 26, 0.16);
+  --ink-trace: rgba(22, 21, 26, 0.07);
+
+  /* ---- fluorescent memory colours ---- */
+  --glow-green: #5ef2a0;
+  --glow-purple: #b07cff;
+  --glow-yellow: #ffe14d;
+
+  --glow-green-deep: #12b877;
+  --glow-purple-deep: #7b3fe4;
+  --glow-yellow-deep: #d9a400;
+
+  /* ---- type ---- */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+  --font-serif: 'Instrument Serif', 'Times New Roman', serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* ---- motion ---- */
+  --ease-memory: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-liquid: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-slow: 1.6s;
+  --dur-mid: 0.9s;
+
+  /* ---- layout ---- */
+  --gutter: clamp(20px, 4.4vw, 72px);
+  --vh: 1vh;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-weight: 300;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  cursor: none;
+}
+
+/* 触屏设备恢复系统指针 */
+@media (hover: none), (pointer: coarse) {
+  body {
+    cursor: auto;
+  }
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: none;
+}
+
+@media (hover: none), (pointer: coarse) {
+  button {
+    cursor: pointer;
+  }
+}
+
+::selection {
+  background: rgba(176, 124, 255, 0.22);
+  color: var(--ink);
+}
+
+/* ============================================================
+   纸张颗粒 / 扫描线 / 暖灰晕影 —— 全局覆盖层
+   ============================================================ */
+
+.paper-grain {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 900;
+  opacity: 0.42;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  background-size: 220px 220px;
+  animation: grain-drift 7s steps(6) infinite;
+}
+
+@keyframes grain-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  16% {
+    transform: translate3d(-2%, -3%, 0);
+  }
+  33% {
+    transform: translate3d(3%, -2%, 0);
+  }
+  50% {
+    transform: translate3d(-1%, 2%, 0);
+  }
+  66% {
+    transform: translate3d(2%, 3%, 0);
+  }
+  83% {
+    transform: translate3d(-3%, 1%, 0);
+  }
+}
+
+.scanlines {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 901;
+  opacity: 0.05;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(22, 21, 26, 0.5) 0px,
+    rgba(22, 21, 26, 0.5) 1px,
+    transparent 1px,
+    transparent 4px
+  );
+}
+
+.vignette {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 899;
+  background: radial-gradient(
+    ellipse 78% 68% at 50% 46%,
+    transparent 0%,
+    transparent 54%,
+    rgba(216, 210, 196, 0.3) 82%,
+    rgba(198, 190, 172, 0.5) 100%
+  );
+}
+
+/* ============================================================
+   排版原语
+   ============================================================ */
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.archive-tag {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-ghost);
+}
+
+.serif-note {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+}
+
+/* ============================================================
+   降级模式
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .paper-grain {
+    animation: none;
+  }
+}
+
+html[data-reduced-motion='true'] .paper-grain {
+  animation: none;
+  opacity: 0.3;
+}
+
+html[data-reduced-motion='true'] .scanlines {
+  display: none;
+}

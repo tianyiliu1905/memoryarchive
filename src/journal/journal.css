@@ -1,0 +1,178 @@
+.journal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--paper);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ======================== 背景层（最慢视差） ======================== */
+
+.journal__bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  will-change: transform;
+}
+
+.journal__bg-title {
+  font-family: var(--font-serif);
+  font-size: clamp(180px, 30vw, 460px);
+  line-height: 0.8;
+  color: var(--ink);
+  opacity: 0.028;
+  white-space: nowrap;
+  padding-left: 8vw;
+  user-select: none;
+}
+
+/* ======================== 顶部档案条 ======================== */
+
+.journal__bar {
+  position: relative;
+  z-index: 5;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: clamp(20px, 3.4vh, 34px) var(--gutter) 0;
+}
+
+.journal__back {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  transition: color 0.5s var(--ease-memory);
+  white-space: nowrap;
+}
+
+.journal__back:hover {
+  color: var(--ink);
+}
+
+.journal__back-arrow {
+  font-size: 13px;
+  transition: transform 0.6s var(--ease-memory);
+}
+
+.journal__back:hover .journal__back-arrow {
+  transform: translateX(-5px);
+}
+
+.journal__meta {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.journal__dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  box-shadow: 0 0 9px 2px currentColor;
+}
+
+.journal__chapter-tag {
+  min-width: 96px;
+  text-align: right;
+  transition: opacity 0.4s var(--ease-memory);
+}
+
+/* ======================== 横向轨道 ======================== */
+
+.journal__viewport {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  overflow: hidden;
+}
+
+.journal__track {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  width: max-content;
+  will-change: transform;
+  padding: 0 var(--gutter);
+}
+
+/* ======================== 底部进度 ======================== */
+
+.journal__progress {
+  position: relative;
+  z-index: 5;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 0 var(--gutter) clamp(20px, 3.4vh, 34px);
+}
+
+.journal__ticks {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.journal__tick {
+  width: 14px;
+  height: 2px;
+  background: var(--ink-trace);
+  transition:
+    background 0.6s var(--ease-memory),
+    width 0.6s var(--ease-memory);
+}
+
+.journal__tick.is-current {
+  width: 26px;
+}
+
+.journal__rail {
+  flex: 1;
+  height: 1px;
+  background: var(--ink-trace);
+  overflow: hidden;
+}
+
+.journal__rail-fill {
+  width: 100%;
+  height: 100%;
+  transform-origin: left;
+  transform: scaleX(0);
+}
+
+.journal__hint {
+  white-space: nowrap;
+  opacity: 0.55;
+}
+
+/* ======================== 响应式 ======================== */
+
+@media (max-width: 640px) {
+  .journal__bg-title {
+    font-size: 40vw;
+  }
+
+  .journal__meta {
+    display: none;
+  }
+
+  .journal__chapter-tag {
+    min-width: auto;
+  }
+
+  .journal__ticks {
+    display: none;
+  }
+}

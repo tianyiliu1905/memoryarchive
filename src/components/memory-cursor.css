@@ -1,0 +1,54 @@
+.memory-cursor {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 950;
+}
+
+.memory-cursor__dot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--ink-soft);
+  filter: blur(0.2px);
+  transition:
+    width 0.5s var(--ease-memory),
+    height 0.5s var(--ease-memory),
+    background 0.6s var(--ease-memory);
+  will-change: transform;
+}
+
+.memory-cursor__ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--ink-ghost);
+  transition:
+    width 0.7s var(--ease-memory),
+    height 0.7s var(--ease-memory),
+    border-color 0.6s var(--ease-memory),
+    opacity 0.6s var(--ease-memory),
+    box-shadow 0.7s var(--ease-memory);
+  will-change: transform;
+  opacity: 0.75;
+}
+
+.memory-cursor.is-active .memory-cursor__ring {
+  width: 54px;
+  height: 54px;
+  opacity: 1;
+  box-shadow:
+    0 0 24px -4px currentColor,
+    inset 0 0 18px -8px currentColor;
+}
+
+.memory-cursor.is-active .memory-cursor__dot {
+  width: 7px;
+  height: 7px;
+}

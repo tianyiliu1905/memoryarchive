@@ -1,0 +1,441 @@
+/* ============================================================
+   章节面板
+   每个章节是横向卷轴上的一「页」，高度锁定在视口内
+   ============================================================ */
+
+.chapter {
+  flex-shrink: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding-right: clamp(60px, 9vw, 170px);
+  position: relative;
+}
+
+/* ---- 显影动画的通用基底 ---- */
+.chapter [data-parallax],
+.chapter__title-line,
+.chapter__para,
+.chapter__points li,
+.chapter__annotation,
+.chapter__meta-row {
+  will-change: transform, opacity, filter;
+}
+
+.chapter__marker,
+.chapter__heading,
+.chapter__lede,
+.chapter__meta,
+.chapter__plates,
+.chapter__annotation {
+  opacity: 0;
+  filter: blur(10px);
+  transform: translateY(16px);
+  transition:
+    opacity 1.7s var(--ease-memory),
+    filter 2s var(--ease-memory),
+    transform 1.7s var(--ease-memory);
+}
+
+.chapter.is-developed .chapter__marker {
+  opacity: 1;
+  filter: blur(0);
+  transform: none;
+}
+
+.chapter.is-developed .chapter__heading {
+  opacity: 1;
+  filter: blur(0);
+  transform: none;
+  transition-delay: 0.16s;
+}
+
+.chapter.is-developed .chapter__lede {
+  opacity: 1;
+  filter: blur(0);
+  transform: none;
+  transition-delay: 0.32s;
+}
+
+.chapter.is-developed .chapter__meta {
+  opacity: 1;
+  filter: blur(0);
+  transform: none;
+  transition-delay: 0.5s;
+}
+
+.chapter.is-developed .chapter__plates {
+  opacity: 1;
+  filter: blur(0);
+  transform: none;
+  transition-delay: 0.28s;
+}
+
+.chapter.is-developed .chapter__annotation {
+  opacity: 1;
+  filter: blur(0);
+  transform: none;
+  transition-delay: 0.62s;
+}
+
+/* 段落逐条显影 */
+.chapter__para,
+.chapter__points li {
+  opacity: 0;
+  filter: blur(8px);
+  transform: translateY(12px);
+  transition:
+    opacity 1.6s var(--ease-memory),
+    filter 1.8s var(--ease-memory),
+    transform 1.6s var(--ease-memory);
+  transition-delay: calc(0.34s + var(--p, 0) * 0.17s);
+}
+
+.chapter.is-developed .chapter__para,
+.chapter.is-developed .chapter__points li {
+  opacity: 1;
+  filter: blur(0);
+  transform: none;
+}
+
+/* ============================================================
+   封面
+   ============================================================ */
+
+.chapter--cover {
+  padding-right: clamp(90px, 14vw, 240px);
+}
+
+.chapter__cover {
+  position: relative;
+  max-width: min(78vw, 660px);
+}
+
+.chapter__title {
+  margin: 22px 0 0;
+  font-family: var(--font-serif);
+  font-size: clamp(48px, 8.4vw, 128px);
+  font-weight: 400;
+  line-height: 0.94;
+  letter-spacing: -0.022em;
+  color: var(--ink);
+}
+
+.chapter__title-line {
+  display: block;
+  opacity: 0;
+  filter: blur(18px);
+  transform: translateY(26px);
+  transition:
+    opacity 2.1s var(--ease-memory),
+    filter 2.4s var(--ease-memory),
+    transform 2.1s var(--ease-memory);
+  transition-delay: calc(0.18s + var(--l, 0) * 0.2s);
+}
+
+.chapter.is-developed .chapter__title-line {
+  opacity: 1;
+  filter: blur(0);
+  transform: none;
+}
+
+.chapter__lede {
+  margin: 30px 0 0;
+  max-width: 46ch;
+  font-size: clamp(14px, 1.42vw, 18px);
+  line-height: 1.78;
+  color: var(--ink-soft);
+}
+
+.chapter__meta {
+  margin: 44px 0 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 22px 34px;
+  max-width: 620px;
+}
+
+.chapter__meta-row dt {
+  margin-bottom: 7px;
+}
+
+.chapter__meta-row dd {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+  letter-spacing: 0.012em;
+}
+
+/* 封面的一团柔光，暗示这段记忆的颜色 */
+.chapter__glow {
+  position: absolute;
+  right: -16%;
+  top: 6%;
+  width: clamp(220px, 26vw, 380px);
+  height: clamp(220px, 26vw, 380px);
+  border-radius: 50%;
+  filter: blur(110px);
+  opacity: 0;
+  transform: scale(0.8);
+  transition:
+    opacity 3s var(--ease-memory),
+    transform 3.4s var(--ease-memory);
+  z-index: -1;
+  pointer-events: none;
+}
+
+.chapter.is-developed .chapter__glow {
+  opacity: 0.2;
+  transform: scale(1);
+  transition-delay: 0.4s;
+}
+
+/* ============================================================
+   图文跨页
+   ============================================================ */
+
+.chapter__spread,
+.chapter__result {
+  display: flex;
+  align-items: center;
+  gap: clamp(40px, 5.6vw, 100px);
+  height: 100%;
+  padding: clamp(40px, 7vh, 80px) 0;
+}
+
+.chapter__text {
+  flex-shrink: 0;
+  width: min(46vw, 480px);
+}
+
+.chapter__heading {
+  margin: 20px 0 0;
+  font-family: var(--font-serif);
+  font-size: clamp(26px, 3.3vw, 46px);
+  font-weight: 400;
+  line-height: 1.14;
+  letter-spacing: -0.008em;
+  color: var(--ink);
+  max-width: 19ch;
+}
+
+.chapter__heading--big {
+  font-size: clamp(30px, 4.2vw, 60px);
+  line-height: 1.06;
+}
+
+.chapter__para {
+  margin: 22px 0 0;
+  font-size: clamp(13px, 1.28vw, 16px);
+  line-height: 1.85;
+  color: var(--ink-soft);
+  max-width: 44ch;
+  letter-spacing: 0.005em;
+}
+
+/* 手写式旁注 */
+.chapter__annotation {
+  margin: 34px 0 0;
+  padding: 4px 0 4px 18px;
+  border-left: 1px solid;
+  font-size: clamp(13px, 1.35vw, 17px);
+  line-height: 1.6;
+  color: var(--ink-faint);
+  max-width: 34ch;
+}
+
+/* ---- 图版 ---- */
+
+.chapter__plates {
+  display: flex;
+  align-items: center;
+  gap: clamp(24px, 3vw, 52px);
+  flex-shrink: 0;
+}
+
+.chapter__plates--wide {
+  gap: clamp(28px, 3.4vw, 60px);
+}
+
+/* ---- 要点列表 ---- */
+
+.chapter__points {
+  margin: 30px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+
+.chapter__points li {
+  display: flex;
+  align-items: baseline;
+  gap: 13px;
+  font-size: clamp(12.5px, 1.2vw, 15px);
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+
+.chapter__bullet {
+  flex-shrink: 0;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  transform: translateY(-2px);
+  box-shadow: 0 0 8px 1px currentColor;
+}
+
+/* ============================================================
+   结尾
+   ============================================================ */
+
+.chapter--next {
+  padding-right: clamp(40px, 6vw, 100px);
+}
+
+.chapter__outro {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 26px;
+  width: min(72vw, 460px);
+}
+
+.chapter__outro-line {
+  margin: 0;
+  font-size: clamp(19px, 2.3vw, 30px);
+  line-height: 1.4;
+  color: var(--ink-faint);
+}
+
+.chapter__return {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 15px;
+  margin-top: 12px;
+}
+
+.chapter__return-ring {
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  border: 1px solid;
+  display: grid;
+  place-items: center;
+  transition: transform 0.9s var(--ease-memory);
+}
+
+.chapter__return:hover .chapter__return-ring {
+  transform: scale(1.13);
+}
+
+.chapter__return-core {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  filter: blur(0.5px);
+  box-shadow: 0 0 20px 5px currentColor;
+  transition: transform 0.9s var(--ease-memory);
+}
+
+.chapter__return:hover .chapter__return-core {
+  transform: scale(1.5);
+}
+
+.chapter__return-label {
+  font-size: 14px;
+  letter-spacing: 0.05em;
+  color: var(--ink-soft);
+}
+
+/* 结尾的渐隐，暗示记忆边界 */
+.chapter__outro-fade {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 30vw;
+  background: linear-gradient(90deg, transparent, var(--paper));
+  pointer-events: none;
+}
+
+/* ============================================================
+   响应式
+   ============================================================ */
+
+@media (max-width: 1024px) {
+  .chapter__text {
+    width: min(54vw, 420px);
+  }
+}
+
+@media (max-width: 768px) {
+  .chapter__spread,
+  .chapter__result {
+    gap: 34px;
+  }
+
+  .chapter__text {
+    width: 76vw;
+  }
+
+  .chapter__plates {
+    gap: 24px;
+  }
+}
+
+@media (max-width: 640px) {
+  .chapter {
+    padding-right: 40px;
+  }
+
+  .chapter__cover {
+    max-width: 84vw;
+  }
+
+  .chapter__title {
+    font-size: clamp(40px, 13vw, 62px);
+  }
+
+  .chapter__meta {
+    grid-template-columns: 1fr 1fr;
+    gap: 16px 20px;
+    margin-top: 30px;
+  }
+
+  .chapter__text {
+    width: 84vw;
+  }
+
+  .chapter__para,
+  .chapter__lede {
+    max-width: none;
+  }
+
+  .chapter__outro {
+    width: 84vw;
+  }
+}
+
+/* ============================================================
+   降级
+   ============================================================ */
+
+html[data-reduced-motion='true'] .chapter__marker,
+html[data-reduced-motion='true'] .chapter__heading,
+html[data-reduced-motion='true'] .chapter__lede,
+html[data-reduced-motion='true'] .chapter__meta,
+html[data-reduced-motion='true'] .chapter__plates,
+html[data-reduced-motion='true'] .chapter__annotation,
+html[data-reduced-motion='true'] .chapter__para,
+html[data-reduced-motion='true'] .chapter__points li,
+html[data-reduced-motion='true'] .chapter__title-line {
+  opacity: 1;
+  filter: none;
+  transform: none;
+  transition: none;
+}
