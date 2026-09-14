@@ -148,6 +148,246 @@ export function ChapterPanel({ chapter, project, accent, index, onExit }: Props)
         </div>
       )}
 
+      {/* ================= 整屏一句话 ================= */}
+      {kind === 'statement' && (
+        <div className="chapter__statement" data-parallax="0.2">
+          <span className="chapter__marker archive-tag" style={{ color: accent.colorDeep }}>
+            {chapter.marker}
+          </span>
+          <p className="chapter__statement-line">{chapter.statement}</p>
+          {chapter.annotation && (
+            <span className="chapter__statement-sub serif-note">{chapter.annotation}</span>
+          )}
+          <span className="chapter__glow" style={{ background: accent.color }} />
+        </div>
+      )}
+
+      {/* ================= 左右对照 ================= */}
+      {kind === 'contrast' && chapter.contrast && (
+        <div className="chapter__contrast">
+          <span className="chapter__marker archive-tag" style={{ color: accent.colorDeep }}>
+            {chapter.marker}
+          </span>
+          {chapter.heading && <h2 className="chapter__heading">{chapter.heading}</h2>}
+
+          <div className="chapter__contrast-pair" data-parallax="0.06">
+            {chapter.contrast.map((side, i) => (
+              <div
+                key={i}
+                className={`chapter__side ${i === 1 ? 'is-after' : ''}`}
+                style={{ ['--p' as string]: i }}
+              >
+                <span
+                  className="chapter__side-tag archive-tag"
+                  style={i === 1 ? { color: accent.colorDeep } : undefined}
+                >
+                  {side.tag}
+                </span>
+                <h3 className="chapter__side-heading">{side.heading}</h3>
+                <ul className="chapter__side-list">
+                  {side.lines.map((l, j) => (
+                    <li key={j}>{l}</li>
+                  ))}
+                </ul>
+                {i === 1 && (
+                  <span className="chapter__side-mark" style={{ background: accent.color }} />
+                )}
+              </div>
+            ))}
+            <span className="chapter__contrast-arrow" style={{ color: accent.colorDeep }}>
+              →
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* ================= 行话 → 人话 ================= */}
+      {kind === 'translate' && chapter.translations && (
+        <div className="chapter__translate">
+          <div className="chapter__translate-head">
+            <span className="chapter__marker archive-tag" style={{ color: accent.colorDeep }}>
+              {chapter.marker}
+            </span>
+            {chapter.heading && <h2 className="chapter__heading">{chapter.heading}</h2>}
+            {chapter.body?.map((p, i) => (
+              <p key={i} className="chapter__para" style={{ ['--p' as string]: i }}>
+                {p}
+              </p>
+            ))}
+          </div>
+
+          <ul className="chapter__pairs" data-parallax="0.05">
+            {chapter.translations.map((t, i) => (
+              <li key={i} className="chapter__pair" style={{ ['--p' as string]: i }}>
+                <span className="chapter__pair-from">{t.from}</span>
+                <span className="chapter__pair-arrow" style={{ color: accent.color }}>
+                  →
+                </span>
+                <span className="chapter__pair-to">{t.to}</span>
+                <span className="chapter__pair-why">{t.why}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* ================= 编号推进 ================= */}
+      {kind === 'steps' && chapter.steps && (
+        <div className="chapter__steps-wrap">
+          <div className="chapter__text" data-parallax="0.12">
+            <span className="chapter__marker archive-tag" style={{ color: accent.colorDeep }}>
+              {chapter.marker}
+            </span>
+            {chapter.heading && <h2 className="chapter__heading">{chapter.heading}</h2>}
+            {chapter.body?.map((p, i) => (
+              <p key={i} className="chapter__para" style={{ ['--p' as string]: i }}>
+                {p}
+              </p>
+            ))}
+          </div>
+
+          <ol className="chapter__steps" data-parallax="0.04">
+            {chapter.steps.map((s, i) => (
+              <li key={i} className="chapter__step" style={{ ['--p' as string]: i }}>
+                <span className="chapter__step-no archive-tag" style={{ color: accent.colorDeep }}>
+                  {s.no}
+                </span>
+                <span className="chapter__step-body">
+                  <span className="chapter__step-title">{s.title}</span>
+                  <span className="chapter__step-detail">{s.detail}</span>
+                </span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+
+      {/* ================= 资料：条目开篇 ================= */}
+      {kind === 'brief' && (
+        <div className="chapter__brief">
+          <span className="chapter__marker archive-tag" style={{ color: accent.colorDeep }}>
+            {chapter.marker}
+          </span>
+          <h1 className="chapter__brief-title">{chapter.heading}</h1>
+          {chapter.body?.map((p, i) => (
+            <p key={i} className="chapter__para" style={{ ['--p' as string]: i }}>
+              {p}
+            </p>
+          ))}
+          {chapter.meta && (
+            <dl className="chapter__meta chapter__meta--tight">
+              {chapter.meta.map((m) => (
+                <div key={m.label} className="chapter__meta-row">
+                  <dt className="archive-tag">{m.label}</dt>
+                  <dd>{m.value}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
+        </div>
+      )}
+
+      {/* ================= 资料：一张表 ================= */}
+      {kind === 'table' && chapter.table && (
+        <div className="chapter__table-wrap">
+          <div className="chapter__table-head">
+            <span className="chapter__marker archive-tag" style={{ color: accent.colorDeep }}>
+              {chapter.marker}
+            </span>
+            {chapter.heading && <h2 className="chapter__heading chapter__heading--ref">{chapter.heading}</h2>}
+          </div>
+
+          <table className="chapter__table">
+            <thead>
+              <tr>
+                {chapter.table.head.map((h, i) => (
+                  <th key={i} className="archive-tag">
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {chapter.table.rows.map((row, i) => (
+                <tr key={i} style={{ ['--p' as string]: i }}>
+                  {row.map((cell, j) => (
+                    <td key={j} className={j === 0 ? 'is-key' : ''}>
+                      {cell}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {chapter.table.note && (
+            <p className="chapter__table-note">{chapter.table.note}</p>
+          )}
+        </div>
+      )}
+
+      {/* ================= 资料：键值清单 ================= */}
+      {kind === 'specs' && (
+        <div className="chapter__specs-wrap">
+          <div className="chapter__table-head">
+            <span className="chapter__marker archive-tag" style={{ color: accent.colorDeep }}>
+              {chapter.marker}
+            </span>
+            {chapter.heading && <h2 className="chapter__heading chapter__heading--ref">{chapter.heading}</h2>}
+          </div>
+
+          <ul className="chapter__specs">
+            {chapter.points?.map((pt, i) => {
+              const [k, ...rest] = pt.split('｜');
+              return (
+                <li key={i} style={{ ['--p' as string]: i }}>
+                  <span className="chapter__spec-key">{k}</span>
+                  <span className="chapter__spec-val">{rest.join('｜')}</span>
+                </li>
+              );
+            })}
+          </ul>
+
+          {chapter.plates && (
+            <div className="chapter__plates" data-parallax="0.03">
+              {chapter.plates.map((pl) => (
+                <Plate key={pl.index} plate={pl} accent={accent.color} />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ================= 资料：代码片段 ================= */}
+      {kind === 'snippet' && chapter.code && (
+        <div className="chapter__snippet-wrap">
+          <div className="chapter__table-head">
+            <span className="chapter__marker archive-tag" style={{ color: accent.colorDeep }}>
+              {chapter.marker}
+            </span>
+            {chapter.heading && <h2 className="chapter__heading chapter__heading--ref">{chapter.heading}</h2>}
+          </div>
+
+          {chapter.body?.map((p, i) => (
+            <p key={i} className="chapter__para" style={{ ['--p' as string]: i }}>
+              {p}
+            </p>
+          ))}
+
+          <pre className="chapter__code">
+            <span className="chapter__code-lang archive-tag">{chapter.code.lang}</span>
+            <code>
+              {chapter.code.lines.map((l, i) => (
+                <span key={i} className="chapter__code-line">
+                  <span className="chapter__code-no">{String(i + 1).padStart(2, '0')}</span>
+                  {l}
+                </span>
+              ))}
+            </code>
+          </pre>
+        </div>
+      )}
+
       {/* ================= 下一段记忆 ================= */}
       {kind === 'next' && (
         <div className="chapter__outro">

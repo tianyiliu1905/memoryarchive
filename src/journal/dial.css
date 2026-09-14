@@ -1,0 +1,221 @@
+/* ============================================================
+   表盘式章节进度
+   横躺在底部的一把尺，游标从左向右滑过
+   ============================================================ */
+
+.dial {
+  position: relative;
+  z-index: 5;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: clamp(16px, 2.4vw, 34px);
+  padding: 0 var(--gutter) clamp(18px, 3vh, 30px);
+}
+
+/* ---------------- 左：读数 ---------------- */
+
+.dial__readout {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  font-family: var(--font-mono);
+  flex-shrink: 0;
+  min-width: 52px;
+}
+
+.dial__readout-num {
+  font-size: 15px;
+  color: var(--ink);
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.dial__readout-sep {
+  font-size: 11px;
+  color: var(--ink-ghost);
+}
+
+.dial__readout-total {
+  font-size: 11px;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------- 中：尺身 ---------------- */
+
+.dial__scale {
+  position: relative;
+  flex: 1;
+  height: 26px;
+  display: flex;
+  align-items: center;
+}
+
+/* 基线：刻度挂在它上面 */
+.dial__baseline,
+.dial__baseline-fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 6px;
+  height: 1px;
+}
+
+.dial__baseline {
+  background: var(--ink-trace);
+}
+
+.dial__baseline-fill {
+  background: var(--dial-accent);
+  opacity: 0.32;
+  transform-origin: left;
+  will-change: transform;
+}
+
+/* ---- 刻度 ---- */
+
+.dial__tick {
+  position: absolute;
+  bottom: 6px;
+  width: 1px;
+  transform: translateX(-50%);
+  background: var(--ink-ghost);
+  transition:
+    height 0.7s var(--ease-memory),
+    background 0.7s var(--ease-memory),
+    opacity 0.7s var(--ease-memory);
+}
+
+.dial__tick--minor {
+  height: 4px;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.dial__tick--minor.is-passed {
+  background: var(--dial-accent);
+  opacity: 0.34;
+}
+
+.dial__tick--major {
+  height: 9px;
+  pointer-events: auto;
+  /* 加宽点击热区，但视觉仍是一根细线 */
+  padding: 0;
+  border: none;
+  background: var(--ink-ghost);
+}
+
+.dial__tick--major::before {
+  content: '';
+  position: absolute;
+  inset: -9px -7px -7px -7px;
+}
+
+.dial__tick--major.is-passed {
+  background: var(--dial-accent);
+  opacity: 0.62;
+}
+
+.dial__tick--major:hover {
+  height: 15px;
+  background: var(--ink-soft);
+}
+
+.dial__tick--major.is-current {
+  height: 17px;
+  background: var(--dial-accent);
+  opacity: 1;
+}
+
+/* ---- 游标 ---- */
+
+.dial__needle {
+  position: absolute;
+  bottom: 6px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  will-change: left;
+}
+
+.dial__needle-stem {
+  width: 1px;
+  height: 21px;
+  background: var(--dial-accent);
+}
+
+.dial__needle-head {
+  position: absolute;
+  top: -4px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--dial-accent);
+}
+
+/* ---------------- 右：章节名 ---------------- */
+
+.dial__tail {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.dial__label {
+  color: var(--ink-faint);
+  white-space: nowrap;
+  min-width: 104px;
+  text-align: right;
+}
+
+.dial__hint {
+  white-space: nowrap;
+  opacity: 0.5;
+}
+
+/* ---------------- 资料型：更细、更安静 ---------------- */
+
+.journal--reference .dial__tick--major.is-current {
+  height: 13px;
+}
+
+.journal--reference .dial__needle-stem {
+  height: 17px;
+}
+
+/* ---------------- 响应式 ---------------- */
+
+@media (max-width: 860px) {
+  .dial__hint {
+    display: none;
+  }
+
+  .dial__label {
+    min-width: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .dial {
+    gap: 12px;
+  }
+
+  .dial__tick--minor {
+    display: none;
+  }
+
+  .dial__label {
+    display: none;
+  }
+}
+
+/* ---------------- 降级 ---------------- */
+
+html[data-reduced-motion='true'] .dial__tick {
+  transition: none;
+}

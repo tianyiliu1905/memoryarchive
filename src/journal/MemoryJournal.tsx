@@ -4,6 +4,7 @@ import { useArchive } from '@/store/archive';
 import { getProject } from '@/data/projects';
 import { CLUSTERS } from '@/data/clusters';
 import { ChapterPanel } from './ChapterPanel';
+import { ChapterDial } from './ChapterDial';
 import './journal.css';
 
 /**
@@ -42,6 +43,18 @@ export function MemoryJournal() {
   const [chapterIdx, setChapterIdx] = useState(0);
 
   const active = depth === 'project' && !!project;
+  const tone = project?.tone ?? 'story';
+
+  /** 点击表盘刻度：滑到该章的左缘 */
+  const seek = useCallback((i: number) => {
+    const track = trackRef.current;
+    if (!track) return;
+    const panel = track.children[i] as HTMLElement | undefined;
+    if (!panel) return;
+    // offsetLeft 含 track 的 padding，减掉一个 gutter 让内容不贴边
+    const gutter = parseFloat(getComputedStyle(track).paddingLeft) || 0;
+    targetX.current = Math.max(0, Math.min(panel.offsetLeft - gutter, maxX.current));
+  }, []);
 
   /* ---------- 重置 ---------- */
   useEffect(() => {
@@ -195,7 +208,18 @@ export function MemoryJournal() {
 
       const p = maxX.current > 0 ? currentX.current / maxX.current : 0;
       setProgress(p);
-      setChapterIdx(Math.min(chapterCount - 1, Math.round(p * (chapterCount - 1))));
+
+      // 按面板实际位置判定当前章：每屏宽度不等，用比例估算会失准
+      if (track) {
+        const probe = currentX.current + window.innerWidth * 0.32;
+        let idx = 0;
+        for (let i = 0; i < track.children.length; i++) {
+          const el = track.children[i] as HTMLElement;
+          if (el.offsetLeft <= probe) idx = i;
+          else break;
+        }
+        setChapterIdx(Math.min(chapterCount - 1, idx));
+      }
 
       raf = requestAnimationFrame(tick);
     };
@@ -211,7 +235,7 @@ export function MemoryJournal() {
     <AnimatePresence>
       {active && (
         <motion.div
-          className="journal"
+          className={`journal journal--${tone}`}
           initial={{ opacity: 0, filter: 'blur(22px)' }}
           animate={{ opacity: 1, filter: 'blur(0px)' }}
           exit={{ opacity: 0, filter: 'blur(16px)', transition: { duration: 0.6 } }}
@@ -260,32 +284,20 @@ export function MemoryJournal() {
             </div>
           </div>
 
-          {/* ---- 底部进度：胶片式 ---- */}
+          {/* ---- 底部进度：表盘式 ---- */}
           <motion.div
-            className="journal__progress"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 1.4, delay: 0.9 }}
           >
-            <div className="journal__ticks">
-              {project.chapters.map((ch, i) => (
-                <span
-                  key={i}
-                  className={`journal__tick ${i === chapterIdx ? 'is-current' : ''}`}
-                  style={i === chapterIdx ? { background: accent.color } : undefined}
-                  title={ch.marker}
-                />
-              ))}
-            </div>
-            <div className="journal__rail">
-              <div
-                className="journal__rail-fill"
-                style={{ transform: `scaleX(${progress})`, background: accent.color }}
-              />
-            </div>
-            <span className="archive-tag journal__hint">
-              {isTouch ? 'Swipe ←' : 'Scroll to read →'}
-            </span>
+            <ChapterDial
+              chapters={project.chapters}
+              progress={progress}
+              current={chapterIdx}
+              accent={accent.color}
+              onSeek={seek}
+              hint={isTouch ? 'Swipe ←' : 'Scroll to read →'}
+            />
           </motion.div>
         </motion.div>
       )}

@@ -21,8 +21,8 @@ export function clusterAnchor(cluster: MemoryCluster) {
    两边必须共用同一个函数，否则「看到的」和「点到的」会错位。
    ============================================================ */
 
-/** 光斑在群内的分布半径 */
-export const MOTE_SPREAD = 0.58;
+/** 光斑在群内的分布半径。每群到 6 颗后适当放大，避免盆全景下挤成一团 */
+export const MOTE_SPREAD = 0.66;
 
 /**
  * 计算某个群内所有光斑的基准偏移。

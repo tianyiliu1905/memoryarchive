@@ -181,6 +181,246 @@ function draw(
       break;
     }
 
+    /* ---------- 线框：网页布局 ---------- */
+    case 'wireframe': {
+      const pad = Math.min(w, h) * 0.08;
+      const iw = w - pad * 2;
+      const ih = h - pad * 2;
+      const line = Math.max(0.8, Math.min(w, h) * 0.0035);
+
+      // 外框
+      ctx.strokeStyle = ink(0.16);
+      ctx.lineWidth = line;
+      ctx.strokeRect(pad, pad, iw, ih);
+
+      // 顶栏
+      const barH = ih * 0.09;
+      ctx.fillStyle = ink(0.05);
+      ctx.fillRect(pad, pad, iw, barH);
+      ctx.strokeStyle = ink(0.13);
+      ctx.beginPath();
+      ctx.moveTo(pad, pad + barH);
+      ctx.lineTo(pad + iw, pad + barH);
+      ctx.stroke();
+      for (let i = 0; i < 3; i++) {
+        ctx.beginPath();
+        ctx.arc(pad + barH * 0.5 + i * barH * 0.55, pad + barH * 0.5, barH * 0.13, 0, Math.PI * 2);
+        ctx.fillStyle = ink(0.16);
+        ctx.fill();
+      }
+
+      // 左侧导航
+      const navW = iw * 0.2;
+      ctx.strokeStyle = ink(0.13);
+      ctx.beginPath();
+      ctx.moveTo(pad + navW, pad + barH);
+      ctx.lineTo(pad + navW, pad + ih);
+      ctx.stroke();
+      for (let i = 0; i < 6; i++) {
+        const y = pad + barH + ih * 0.07 + i * ih * 0.1;
+        const active = i === 1;
+        ctx.fillStyle = active ? rgba(0.4) : ink(0.11);
+        ctx.fillRect(pad + navW * 0.16, y, navW * (active ? 0.66 : 0.5), ih * 0.028);
+      }
+
+      // 右侧内容卡片
+      const cx0 = pad + navW + iw * 0.05;
+      const cw = iw - navW - iw * 0.1;
+      ctx.fillStyle = ink(0.09);
+      ctx.fillRect(cx0, pad + barH + ih * 0.08, cw * 0.42, ih * 0.05);
+
+      const cardCols = 3;
+      const cardW = cw / cardCols - cw * 0.03;
+      for (let r = 0; r < 2; r++) {
+        for (let c = 0; c < cardCols; c++) {
+          const x = cx0 + c * (cardW + cw * 0.045);
+          const y = pad + barH + ih * 0.2 + r * ih * 0.33;
+          ctx.strokeStyle = ink(0.12);
+          ctx.lineWidth = line;
+          ctx.strokeRect(x, y, cardW, ih * 0.26);
+          ctx.fillStyle = rnd() > 0.6 ? rgba(0.1) : ink(0.035);
+          ctx.fillRect(x, y, cardW, ih * 0.13);
+          ctx.fillStyle = ink(0.1);
+          ctx.fillRect(x + cardW * 0.08, y + ih * 0.17, cardW * 0.62, ih * 0.016);
+          ctx.fillRect(x + cardW * 0.08, y + ih * 0.205, cardW * 0.4, ih * 0.016);
+        }
+      }
+      break;
+    }
+
+    /* ---------- 手机屏：含底部标签栏 ---------- */
+    case 'handset': {
+      const phoneH = h * 0.86;
+      const phoneW = phoneH * 0.49;
+      const px0 = (w - phoneW) / 2;
+      const py0 = (h - phoneH) / 2;
+      const radius = phoneW * 0.1;
+      const line = Math.max(0.9, Math.min(w, h) * 0.004);
+
+      const roundRect = (x: number, y: number, rw: number, rh: number, r: number) => {
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.arcTo(x + rw, y, x + rw, y + rh, r);
+        ctx.arcTo(x + rw, y + rh, x, y + rh, r);
+        ctx.arcTo(x, y + rh, x, y, r);
+        ctx.arcTo(x, y, x + rw, y, r);
+        ctx.closePath();
+      };
+
+      roundRect(px0, py0, phoneW, phoneH, radius);
+      ctx.strokeStyle = ink(0.2);
+      ctx.lineWidth = line * 1.6;
+      ctx.stroke();
+
+      // 刘海
+      ctx.fillStyle = ink(0.14);
+      ctx.fillRect(px0 + phoneW * 0.34, py0 + phoneH * 0.018, phoneW * 0.32, phoneH * 0.012);
+
+      // 内容占位
+      const inX = px0 + phoneW * 0.09;
+      const inW = phoneW * 0.82;
+      ctx.fillStyle = ink(0.12);
+      ctx.fillRect(inX, py0 + phoneH * 0.08, inW * 0.52, phoneH * 0.022);
+      for (let i = 0; i < 3; i++) {
+        const y = py0 + phoneH * 0.14 + i * phoneH * 0.17;
+        ctx.strokeStyle = ink(0.11);
+        ctx.lineWidth = line;
+        roundRect(inX, y, inW, phoneH * 0.14, phoneW * 0.04);
+        ctx.stroke();
+        ctx.fillStyle = i === 0 ? rgba(0.14) : ink(0.03);
+        roundRect(inX, y, inW, phoneH * 0.075, phoneW * 0.04);
+        ctx.fill();
+        ctx.fillStyle = ink(0.1);
+        ctx.fillRect(inX + inW * 0.08, y + phoneH * 0.095, inW * 0.56, phoneH * 0.011);
+      }
+
+      // 底部标签栏：四个入口
+      const tabY = py0 + phoneH * 0.87;
+      ctx.strokeStyle = ink(0.14);
+      ctx.lineWidth = line;
+      ctx.beginPath();
+      ctx.moveTo(px0, tabY);
+      ctx.lineTo(px0 + phoneW, tabY);
+      ctx.stroke();
+
+      for (let i = 0; i < 4; i++) {
+        const cx = px0 + phoneW * (0.155 + i * 0.23);
+        const cy = tabY + phoneH * 0.045;
+        const active = i === 0;
+        ctx.beginPath();
+        ctx.arc(cx, cy - phoneH * 0.012, phoneW * 0.055, 0, Math.PI * 2);
+        ctx.strokeStyle = active ? rgba(0.65) : ink(0.16);
+        ctx.lineWidth = line * 1.2;
+        ctx.stroke();
+        if (active) {
+          ctx.fillStyle = rgba(0.3);
+          ctx.fill();
+        }
+        ctx.fillStyle = active ? rgba(0.5) : ink(0.12);
+        ctx.fillRect(cx - phoneW * 0.062, cy + phoneH * 0.014, phoneW * 0.124, phoneH * 0.008);
+      }
+      break;
+    }
+
+    /* ---------- 分支：版本流向 ---------- */
+    case 'branch': {
+      const mainY = h * 0.34;
+      const x0 = w * 0.08;
+      const x1 = w * 0.92;
+      const line = Math.max(1, Math.min(w, h) * 0.004);
+
+      // 主干
+      ctx.strokeStyle = ink(0.2);
+      ctx.lineWidth = line * 1.4;
+      ctx.beginPath();
+      ctx.moveTo(x0, mainY);
+      ctx.lineTo(x1, mainY);
+      ctx.stroke();
+
+      const nodeAt = (x: number, y: number, filled: boolean, r: number) => {
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        if (filled) {
+          ctx.fillStyle = rgba(0.7);
+          ctx.fill();
+        } else {
+          ctx.fillStyle = '#efece5';
+          ctx.fill();
+          ctx.strokeStyle = ink(0.3);
+          ctx.lineWidth = line;
+          ctx.stroke();
+        }
+      };
+
+      const nodeR = Math.min(w, h) * 0.016;
+      const mainCount = 5;
+      for (let i = 0; i < mainCount; i++) {
+        const x = x0 + ((x1 - x0) / (mainCount - 1)) * i;
+        nodeAt(x, mainY, i === 0 || i === mainCount - 1, nodeR);
+      }
+
+      // 两条分支：拉出去、再并回来
+      const branches = [
+        { from: 1, to: 3, depth: 0.26, n: 2 },
+        { from: 2, to: 4, depth: 0.46, n: 3 },
+      ];
+      branches.forEach((b, bi) => {
+        const fx = x0 + ((x1 - x0) / (mainCount - 1)) * b.from;
+        const tx = x0 + ((x1 - x0) / (mainCount - 1)) * b.to;
+        const by = mainY + h * b.depth;
+
+        ctx.strokeStyle = bi === 0 ? rgba(0.5) : ink(0.22);
+        ctx.lineWidth = line * 1.1;
+        ctx.beginPath();
+        ctx.moveTo(fx, mainY);
+        ctx.bezierCurveTo(fx + (tx - fx) * 0.18, mainY, fx + (tx - fx) * 0.1, by, fx + (tx - fx) * 0.3, by);
+        ctx.lineTo(tx - (tx - fx) * 0.3, by);
+        ctx.bezierCurveTo(tx - (tx - fx) * 0.1, by, tx - (tx - fx) * 0.18, mainY, tx, mainY);
+        ctx.stroke();
+
+        for (let i = 0; i < b.n; i++) {
+          const t = (i + 1) / (b.n + 1);
+          const nx = fx + (tx - fx) * (0.3 + t * 0.4);
+          nodeAt(nx, by, bi === 0, nodeR * 0.82);
+        }
+      });
+      break;
+    }
+
+    /* ---------- 色卡 / 样本格 ---------- */
+    case 'swatch': {
+      const cols = 4;
+      const rows = 3;
+      const pad = Math.min(w, h) * 0.09;
+      const gap = Math.min(w, h) * 0.035;
+      const cw = (w - pad * 2 - gap * (cols - 1)) / cols;
+      const ch = (h - pad * 2 - gap * (rows - 1)) / rows;
+      const line = Math.max(0.8, Math.min(w, h) * 0.003);
+
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const x = pad + c * (cw + gap);
+          const y = pad + r * (ch + gap);
+          const t = rnd();
+
+          ctx.strokeStyle = ink(0.13);
+          ctx.lineWidth = line;
+          ctx.strokeRect(x, y, cw, ch);
+
+          // 上半：色块
+          ctx.fillStyle = t > 0.66 ? rgba(0.1 + t * 0.3) : ink(0.03 + t * 0.09);
+          ctx.fillRect(x, y, cw, ch * 0.58);
+
+          // 下半：两行标签
+          ctx.fillStyle = ink(0.16);
+          ctx.fillRect(x + cw * 0.1, y + ch * 0.7, cw * 0.55, ch * 0.055);
+          ctx.fillStyle = ink(0.09);
+          ctx.fillRect(x + cw * 0.1, y + ch * 0.82, cw * 0.34, ch * 0.045);
+        }
+      }
+      break;
+    }
+
     /* ---------- 轨迹：环绕的路径 ---------- */
     case 'orbit': {
       const cx = w * 0.5;
