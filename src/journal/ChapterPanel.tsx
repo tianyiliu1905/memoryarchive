@@ -130,7 +130,10 @@ export function ChapterPanel({ chapter, project, accent, index, onExit }: Props)
               <ul className="chapter__points">
                 {chapter.points.map((pt, i) => (
                   <li key={i} style={{ ['--p' as string]: i }}>
-                    <span className="chapter__bullet" style={{ background: accent.color }} />
+                    <span
+                  className="chapter__bullet"
+                  style={{ background: accent.color, color: accent.color }}
+                />
                     {pt}
                   </li>
                 ))}
@@ -398,7 +401,10 @@ export function ChapterPanel({ chapter, project, accent, index, onExit }: Props)
 
           <button className="chapter__return" onClick={onExit}>
             <span className="chapter__return-ring" style={{ borderColor: accent.color }}>
-              <span className="chapter__return-core" style={{ background: accent.color }} />
+              <span
+              className="chapter__return-core"
+              style={{ background: accent.color, color: accent.color }}
+            />
             </span>
             <span className="chapter__return-label">返回记忆盆</span>
             <span className="archive-tag">{project.archiveId} — end of memory</span>

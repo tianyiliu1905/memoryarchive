@@ -110,12 +110,13 @@ export const basinFragmentShader = /* glsl */ `
     shade -= basin * 0.02;             // 盆内整体略沉
     shade += sheen * basin;            // 光圈提亮
 
-    vec3 paper = vec3(0.968, 0.961, 0.949);
+    // 必须与 CSS 的 --paper 保持一致，否则盆与页面底色之间会有一道色差边
+    vec3 paper = vec3(0.965, 0.965, 0.965);
     vec3 col = paper + vec3(shade);
 
-    // 液体略带一点冷调，和暖纸形成微差
-    col.b += basin * 0.006;
-    col.r -= basin * 0.002;
+    // 液体略带一点冷调，和纸面拉开极微弱的层次
+    col.b += basin * 0.005;
+    col.r -= basin * 0.003;
 
     // 聚焦时，被选中群的色彩极淡地渗进液体
     col = mix(col, col * 0.985 + uTint * 0.035, uFocusAmt * basin);

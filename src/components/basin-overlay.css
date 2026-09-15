@@ -12,17 +12,34 @@
 
 /* ============================ 中央标题 ============================ */
 
+/* 用 inset + flex 居中，而不是 left:50% + translate(-50%,-50%)。
+
+   原因：framer-motion 的 animate 会接管 transform 属性，
+   CSS 里写的 translate(-50%,-50%) 会被它的值整个覆盖，
+   容器于是从视口中心向右铺开。标题左右对称时看不出来，
+   一旦右侧挂了装饰线，重心偏移就很明显。 */
 .archive-title {
   position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   user-select: none;
+  pointer-events: none;
 }
 
 .archive-title h1 {
+  /* inline-block：宽度收缩到文字本身，横线才能贴着文字右缘定位。
+     父容器的 text-align: center 依然负责整体居中。
+
+     再整体右移一点：横线挂在右侧会让视觉重心偏左，
+     标题正中时反而显得偏了，所以把文字往右推回去一些。 */
+  display: inline-block;
+  position: relative;
   margin: 0;
+  margin-left: clamp(40px, 6vw, 92px);
   font-family: var(--font-sans);
   font-size: clamp(11px, 1.05vw, 14px);
   font-weight: 400;
@@ -32,8 +49,36 @@
   white-space: nowrap;
 }
 
+/* 装饰性横线：贴着标题右缘向外延伸。
+   left 用 100% 减去一个字距——letter-spacing 会在最后一个字母
+   后面也留出空隙，不减掉的话线会离标题过远。 */
+.archive-title__rule {
+  position: absolute;
+  top: 50%;
+  left: calc(100% - 0.52em);
+  width: clamp(48px, 7vw, 104px);
+  height: 1px;
+  /* 垂直居中用 margin 而非 translateY：transform 要留给展开动画 */
+  margin-top: -0.5px;
+  margin-left: 18px;
+  background: var(--ink-ghost);
+  transform-origin: left center;
+  animation: rule-extend 1.8s var(--ease-memory) 1.1s backwards;
+}
+
+@keyframes rule-extend {
+  from {
+    transform: scaleX(0);
+    opacity: 0;
+  }
+  to {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
 .archive-sub {
-  margin: 14px 0 0;
+  margin: 8px 0 0;
   font-family: var(--font-serif);
   font-style: italic;
   font-size: clamp(12px, 1.15vw, 15px);
@@ -56,13 +101,44 @@
   max-width: min(84vw, 420px);
 }
 
+/* 十字标记。
+   容器本身不可见，只负责定位与承载光晕；
+   两条伪元素交叉成 ＋，横竖各一。 */
 .cluster-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  filter: blur(0.4px);
-  box-shadow: 0 0 12px 3px currentColor;
+  position: relative;
+  width: 11px;
+  height: 11px;
+  filter: blur(0.25px);
   opacity: 0.85;
+}
+
+.cluster-dot::before,
+.cluster-dot::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  background: currentColor;
+  /* 光晕跟着笔画走，而不是套在整个方形容器外 */
+  box-shadow:
+    0 0 4px 0 currentColor,
+    0 0 10px 0 currentColor;
+}
+
+/* 横笔画 */
+.cluster-dot::before {
+  width: 11px;
+  height: 1.5px;
+  margin-left: -5.5px;
+  margin-top: -0.75px;
+}
+
+/* 竖笔画 */
+.cluster-dot::after {
+  width: 1.5px;
+  height: 11px;
+  margin-left: -0.75px;
+  margin-top: -5.5px;
 }
 
 .cluster-name {
@@ -240,7 +316,9 @@
 }
 
 .strata-nav__item.is-current .strata-nav__dot {
-  box-shadow: 0 0 12px 3px currentColor;
+  box-shadow:
+    0 0 5px 0 currentColor,
+    0 0 13px 0 currentColor;
 }
 
 .strata-nav__name {
@@ -385,6 +463,11 @@
     line-height: 2;
   }
 
+  /* 窄屏标题会折行，横线挂在右侧会落到奇怪的位置 */
+  .archive-title__rule {
+    display: none;
+  }
+
   .cluster-view__head {
     top: clamp(56px, 10vh, 90px);
     max-width: calc(100vw - var(--gutter) * 2);
@@ -441,4 +524,10 @@
   .cluster-label {
     bottom: 11vh;
   }
+}
+
+/* ============================ 动效降级 ============================ */
+
+html[data-reduced-motion='true'] .archive-title__rule {
+  animation: none;
 }

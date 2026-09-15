@@ -80,7 +80,9 @@
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  box-shadow: 0 0 9px 2px currentColor;
+  box-shadow:
+    0 0 4px 0 currentColor,
+    0 0 11px 0 currentColor;
 }
 
 .journal__chapter-tag {

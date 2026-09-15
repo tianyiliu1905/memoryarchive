@@ -63,7 +63,12 @@ export function BasinOverlay({ subscribe, subscribePan }: Props) {
             exit={{ opacity: 0, y: -10, filter: 'blur(10px)', transition: { duration: 0.7 } }}
             transition={{ duration: 2.2, ease: [0.16, 1, 0.3, 1], delay: 0.35 }}
           >
-            <h1>ALIX’S MEMORY ARCHIVE</h1>
+            <h1>
+              ALIX’S MEMORY ARCHIVE
+              {/* 装饰性横线：贴着文字右缘向外延伸并淡出。
+                  放在 h1 内部，才能用 left:100% 锚到文字末尾而非整行行尾。 */}
+              <span className="archive-title__rule" aria-hidden="true" />
+            </h1>
             <p className="archive-sub">Select a memory to enter</p>
           </motion.header>
         )}
@@ -80,7 +85,9 @@ export function BasinOverlay({ subscribe, subscribePan }: Props) {
             exit={{ opacity: 0, y: -6, filter: 'blur(8px)' }}
             transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
           >
-            <span className="cluster-dot" style={{ background: clusterData.color }} />
+            {/* 十字标记由伪元素绘制，这里只需给 color——
+                笔画与光晕都取 currentColor */}
+            <span className="cluster-dot" style={{ color: clusterData.color }} />
             <span className="cluster-name">{clusterData.title}</span>
             <span className="cluster-whisper serif-note">{clusterData.whisper}</span>
             <span className="cluster-count archive-tag">
@@ -163,6 +170,7 @@ export function BasinOverlay({ subscribe, subscribePan }: Props) {
                       className="strata-nav__dot"
                       style={{
                         background: c.color,
+                        color: c.color,
                         opacity: isCurrent ? 1 : 0.28,
                       }}
                     />

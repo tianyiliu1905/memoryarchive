@@ -261,7 +261,10 @@ export function MemoryJournal() {
 
             <div className="journal__meta">
               <span className="archive-tag">{project.archiveId}</span>
-              <span className="journal__dot" style={{ background: accent.color }} />
+              <span
+                className="journal__dot"
+                style={{ background: accent.color, color: accent.color }}
+              />
               <span className="archive-tag">{CLUSTERS[project.cluster].label}</span>
             </div>
 
