@@ -91,7 +91,10 @@ export function HitZones({ dragGuard }: HitZonesProps) {
                 }}
                 visible={false}
               >
-                <sphereGeometry args={[0.17, 10, 10]} />
+                {/* 半径要够大以覆盖摆动（远景幅度 0.14），但又不能超过
+                    相邻光斑最小间距的一半——绿色群最密处只有 0.207，
+                    取 0.2 是覆盖与不误判之间的折中。 */}
+                <sphereGeometry args={[0.2, 10, 10]} />
                 <meshBasicMaterial transparent opacity={0} />
               </mesh>
             );
@@ -133,7 +136,9 @@ export function HitZones({ dragGuard }: HitZonesProps) {
               }}
               visible={false}
             >
-              <sphereGeometry args={[0.44, 12, 12]} />
+              {/* 半径需 ≥ 聚焦摆动幅度（0.3）。聚焦后光斑已外扩到
+                  1.85 倍，彼此间距足够，不必担心命中区重叠。 */}
+              <sphereGeometry args={[0.6, 12, 12]} />
               <meshBasicMaterial transparent opacity={0} />
             </mesh>
           );

@@ -76,7 +76,7 @@ export const motesVertexShader = /* glsl */ `
 
        三个频率刻意取无公约数的比值，合成周期很长，
        肉眼不会察觉到重复。 */
-    float t = uTime * 0.34;
+    float t = uTime * 0.62;
     float ph = aSeed * 6.283;
 
     vec3 sway;
@@ -96,12 +96,15 @@ export const motesVertexShader = /* glsl */ `
        注意：这里先不加到 pos 上。下面第 4 步的聚焦外扩会把 pos
        重写成「方向 × 重算半径」，任何提前叠加的径向位移都会被
        归一化掉——那正是之前摆动几乎看不出来的原因。
-       所以摆动留到外扩之后再叠。 */
-    float swayAmp = mix(0.055, 0.12, uFocus);
+       所以摆动留到外扩之后再叠。
+
+       改幅度时记得同步 HitZones 里命中球的半径，
+       否则光斑会摆出自己的可点击范围。 */
+    float swayAmp = mix(0.11, 0.32, uFocus);
     vec3 swayOffset = sway * swayAmp;
 
     // ---- 2. 呼吸 ----
-    float breathe = sin(uTime * 0.42 + aSeed * 6.283) * 0.5 + 0.5;
+    float breathe = sin(uTime * 0.72 + aSeed * 6.283) * 0.5 + 0.5;
 
     /* ---- 3. 指针的影响 ----
        只提亮，不位移。
@@ -163,7 +166,8 @@ export const motesVertexShader = /* glsl */ `
 
     // ---- 6. 大小 ----
     float size = aSize;
-    size *= mix(0.86, 1.14, breathe);
+    // 呼吸：大小起伏加大，让「活着」的感觉更明显
+    size *= mix(0.74, 1.3, breathe);
     size *= mix(1.0, 2.45, uFocus);
     size *= 1.0 + hot * 0.55;
     // 悬停的光斑放大——不再依赖 uFocus，盆视角下也要有反馈
@@ -174,7 +178,8 @@ export const motesVertexShader = /* glsl */ `
     gl_PointSize = size * uPixelRatio * (300.0 / -mv.z);
     gl_Position = projectionMatrix * mv;
 
-    vBright = aBright * mix(0.9, 1.1, breathe);
+    // 亮度也跟着呼吸起伏，与大小变化同相，强化脉动感
+    vBright = aBright * mix(0.78, 1.22, breathe);
     vHot = hot;
     vHover = isHovered;
   }
