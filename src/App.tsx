@@ -77,7 +77,6 @@ export default function App() {
       <Awakening />
 
       {/* ---------- 质感覆盖层 ---------- */}
-      <div className="vignette" />
       <div className="paper-grain" />
       <div className="scanlines" />
 

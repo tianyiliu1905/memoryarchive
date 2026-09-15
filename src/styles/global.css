@@ -101,12 +101,15 @@ button {
 }
 
 /* ============================================================
-   纸张颗粒 / 扫描线 / 暖灰晕影 —— 全局覆盖层
+   纸张颗粒 / 扫描线 —— 全局覆盖层
    ============================================================ */
 
+/* 向四边溢出一圈：grain-drift 每步会平移 2~3%，
+   若正好铺满视口，一移动就会在边缘露出没有颗粒的空隙，
+   看上去像画面四周有一圈在呼吸的框。 */
 .paper-grain {
   position: fixed;
-  inset: 0;
+  inset: -4%;
   pointer-events: none;
   z-index: 900;
   opacity: 0.42;
@@ -150,20 +153,6 @@ button {
     rgba(22, 21, 26, 0.5) 1px,
     transparent 1px,
     transparent 4px
-  );
-}
-
-.vignette {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 899;
-  background: radial-gradient(
-    ellipse 78% 68% at 50% 46%,
-    transparent 0%,
-    transparent 54%,
-    rgba(216, 210, 196, 0.3) 82%,
-    rgba(198, 190, 172, 0.5) 100%
   );
 }
 
