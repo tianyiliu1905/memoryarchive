@@ -30,7 +30,7 @@ export function MemoryBasinScene({ pointer, diveCharge, panAmount, dragGuard }: 
         alpha: true,
         powerPreference: 'high-performance',
       }}
-      camera={{ fov: 42, near: 0.1, far: 100, position: [0, 9.2, 0.001] }}
+      camera={{ fov: 42, near: 0.1, far: 100, position: [0, 9.2, 0] }}
       style={{ position: 'absolute', inset: 0 }}
     >
       <CameraRig pointer={pointer} diveCharge={diveCharge} panAmount={panAmount} />
