@@ -161,3 +161,11 @@ export const useArchive = create<ArchiveState>((set, get) => ({
   setReducedMotion: (v) => set({ reducedMotion: v }),
   setIsTouch: (v) => set({ isTouch: v }),
 }));
+
+/* 开发期调试入口。
+   卷轴深处的章节要点五六次才能到达，排查排版问题时
+   需要能直接跳进某个项目。与上面的 __depthTrace 同理，
+   只在 DEV 下挂载，生产构建里整段会被 tree-shake 掉。 */
+if (import.meta.env.DEV) {
+  (window as unknown as { __archive?: unknown }).__archive = useArchive;
+}

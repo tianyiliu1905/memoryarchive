@@ -841,11 +841,19 @@
    结尾
    ============================================================ */
 
+/* 结尾页比其他章节更宽松：右侧还要给渐隐留出位置，
+   否则遇上“这段记忆到此为止”会被遮罩压到。 */
 .chapter--next {
-  padding-right: clamp(40px, 6vw, 100px);
+  padding-right: clamp(60px, 9vw, 170px);
 }
 
 .chapter__outro {
+  /* 渐隐遮罩是绝对定位的，这里必须做定位基准。
+
+     不写的话它会往上找到 .chapter，right:0 配 30vw 宽度
+     会从章节右缘倒着盖回来，正好码在结尾文字和返回
+     按钮上，看起来就像上一页的“回望”与它重叠了。 */
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -904,13 +912,18 @@
   color: var(--ink-soft);
 }
 
-/* 结尾的渐隐，暗示记忆边界 */
+/* 结尾的渐隐，暗示记忆边界。
+
+   靠 left:100% 挂在内容右外侧，而不是 right:0——
+   后者会从章节右缘向内铺 30vw，把正文盖住。
+   现在它始终在文字之后开始，只负责向右淡出。 */
 .chapter__outro-fade {
   position: absolute;
-  right: 0;
+  left: 100%;
   top: 0;
   bottom: 0;
   width: 30vw;
+  margin-left: clamp(40px, 6vw, 100px);
   background: linear-gradient(90deg, transparent, var(--paper));
   pointer-events: none;
 }

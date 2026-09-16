@@ -33,6 +33,7 @@ export function MemoryJournal() {
 
   const trackRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
+  const bgRef = useRef<HTMLDivElement>(null);
 
   const targetX = useRef(0);
   const currentX = useRef(0);
@@ -190,6 +191,44 @@ export function MemoryJournal() {
     let raf = 0;
     const chapterCount = project?.chapters.length ?? 1;
 
+    /* 视差图层的静态信息，量一次就够。
+
+       每帧重新读 offsetLeft / offsetWidth 会触发强制同步布局，
+       几十个元素叠加起来足以掉帧。而这些位置只由布局决定，
+       在 resize 之前不会变，所以缓存下来。 */
+    type Layer = { el: HTMLElement; rate: number; center: number };
+    let layers: Layer[] = [];
+
+    const measure = () => {
+      const track = trackRef.current;
+      if (!track) return;
+
+      layers = Array.from(track.querySelectorAll<HTMLElement>('[data-parallax]')).map((el) => {
+        /* 累加到 track 为止，才能得到与 currentX 同一坐标系的位置。
+
+           不能直接用 el.offsetLeft：offsetLeft 是相对最近的定位
+           祖先，而 .chapter 是 position: relative，所以它给出的
+           只是「在本章节内的位置」，各章节都从 0 开始算。 */
+        let x = 0;
+        let node: HTMLElement | null = el;
+        while (node && node !== track) {
+          x += node.offsetLeft;
+          node = node.offsetParent as HTMLElement | null;
+        }
+
+        return {
+          el,
+          rate: parseFloat(el.dataset.parallax || '0'),
+          center: x + el.offsetWidth * 0.5,
+        };
+      });
+    };
+
+    measure();
+    // effect 执行时子面板未必已完成布局，下一帧再补量一次
+    const remeasure = requestAnimationFrame(measure);
+    window.addEventListener('resize', measure);
+
     const tick = () => {
       const friction = reducedMotion ? 1 : FRICTION;
       currentX.current += (targetX.current - currentX.current) * friction;
@@ -198,12 +237,38 @@ export function MemoryJournal() {
       if (track) {
         track.style.transform = `translate3d(${-currentX.current}px, 0, 0)`;
 
-        // 分层视差
-        const layers = track.querySelectorAll<HTMLElement>('[data-parallax]');
-        layers.forEach((el) => {
-          const rate = parseFloat(el.dataset.parallax || '0');
-          el.style.transform = `translate3d(${currentX.current * rate}px, 0, 0)`;
-        });
+        /* ---- 分层视差 ----
+
+           位移基于「该元素离视口中心有多远」，而不是卷轴的累计
+           滚动距离。
+
+           曾经这里写的是 currentX * rate。currentX 是从卷首算起的
+           总位移，会一路涨到两万多像素；乘上 0.12 之后，靠后的章节
+           会被推出去近两个屏幕宽，直接压在后面几屏上——这正是
+           「这段记忆到此为止」被前面内容盖住的原因：它是最后一屏，
+           此时 currentX 最大，前面各层的越界也最严重。章节越多的
+           项目越明显，所以几乎每个长项目都中招。
+
+           改成相对偏移后，位移被限制在半屏 × rate 以内（实测
+           ±214px），每个元素只在自己那一屏前后摆动，章节之间
+           再也不会互相侵入。 */
+        const viewCenter = currentX.current + window.innerWidth * 0.5;
+        for (const l of layers) {
+          l.el.style.transform = `translate3d(${(viewCenter - l.center) * l.rate}px, 0, 0)`;
+        }
+      }
+
+      /* 背景大字单独处理。
+
+         它在 track 外部，上面的 querySelectorAll 扫不到，
+         所以虽然标了 data-parallax 却一直是静止的。
+         它是铺满屏的背景层，没有「属于哪一屏」的概念，
+         因此仍按累计位移驱动——但速率极低（0.055），
+         而且它在最底层且不参与布局，不会压到任何正文。 */
+      const bg = bgRef.current;
+      if (bg) {
+        const rate = parseFloat(bg.dataset.parallax || '0');
+        bg.style.transform = `translate3d(${-currentX.current * rate}px, 0, 0)`;
       }
 
       const p = maxX.current > 0 ? currentX.current / maxX.current : 0;
@@ -224,7 +289,16 @@ export function MemoryJournal() {
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+
+    /* 字体是异步加载的，衬线标题落位后各层的中心会变；
+       不重新量一次，视差的基准就停在 fallback 字体的布局上。 */
+    document.fonts?.ready.then(measure).catch(() => {});
+
+    return () => {
+      cancelAnimationFrame(raf);
+      cancelAnimationFrame(remeasure);
+      window.removeEventListener('resize', measure);
+    };
   }, [active, reducedMotion, project]);
 
   if (!project || !accent) return null;
@@ -243,7 +317,7 @@ export function MemoryJournal() {
           style={{ ['--accent' as string]: accent.color, ['--accent-deep' as string]: accent.colorDeep }}
         >
           {/* ---- 背景：最慢的一层 ---- */}
-          <div className="journal__bg" data-parallax="0.055">
+          <div className="journal__bg" data-parallax="0.055" ref={bgRef}>
             <span className="journal__bg-title">{project.title}</span>
           </div>
 

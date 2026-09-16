@@ -86,19 +86,90 @@
   color: var(--ink-faint);
 }
 
-/* ============================ 群标签 ============================ */
+/* ============================ 首屏滚动指引 ============================ */
 
-.cluster-label {
+/* 结构：文字 / 横线 / 下垂线 / 菱形，自上而下排成一列。
+   位置压在标题下方，靠 top 的百分比而不是紧贴标题——
+   标题本身是 flex 居中的，跟着它排会把标题顶上去。 */
+.scroll-cue {
   position: absolute;
   left: 50%;
-  bottom: 15vh;
+  top: 62%;
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
+  pointer-events: none;
+  user-select: none;
+}
+
+.scroll-cue__label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  /* 字距会在最后一个字后面也留空，右移半个字距补回视觉居中 */
+  text-indent: 0.3em;
+  color: var(--ink-faint);
+  margin-bottom: 9px;
+}
+
+.scroll-cue__bar {
+  width: 52px;
+  height: 1px;
+  background: var(--ink-ghost);
+}
+
+.scroll-cue__stem {
+  width: 1px;
+  height: 22px;
+  background: var(--ink-ghost);
+  /* 顺着横线往下长，与菱形之间留一点空 */
+  margin-top: 0;
+}
+
+/* 旋转 45° 的方块 = 菱形 */
+.scroll-cue__diamond {
+  width: 6px;
+  height: 6px;
+  margin-top: 3px;
+  border: 1px solid var(--ink-faint);
+  transform: rotate(45deg);
+  animation: cue-drift 2.6s var(--ease-memory) infinite;
+}
+
+/* 菱形轻微上下浮动，暗示「往下」 */
+@keyframes cue-drift {
+  0%,
+  100% {
+    transform: rotate(45deg) translate(0, 0);
+    opacity: 0.85;
+  }
+  50% {
+    transform: rotate(45deg) translate(2.5px, 2.5px);
+    opacity: 0.45;
+  }
+}
+
+/* ============================ 群标签 ============================ */
+
+/* 靠左下排列，而不是居中。
+
+   居中时它正好压在盆心下方，而那里正是光斑最密的一带；
+   弥散范围扩大后冲突更明显。摆到左侧后，文字落在空白处，
+   与群近景的 .cluster-view__head 也对齐到同一条左边界上。
+
+   文字改为左对齐：靠边摆的一块居中文本，每行长短不一时
+   左边缘会参差不齐，看上去像排版出了错。 */
+.cluster-label {
+  position: absolute;
+  left: var(--gutter);
+  bottom: 15vh;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   gap: 9px;
-  text-align: center;
-  max-width: min(84vw, 420px);
+  text-align: left;
+  max-width: min(60vw, 380px);
 }
 
 /* 十字标记。
@@ -108,10 +179,17 @@
   position: relative;
   width: 11px;
   height: 11px;
-  filter: blur(0.25px);
-  opacity: 0.85;
+  /* 不再模糊：要的是干净扁平的笔画，
+     blur 会把 1.5px 的细线抹成一道灰边 */
+  opacity: 0.9;
 }
 
+/* 纯实心笔画，没有任何光晕。
+
+   原本这里堆了两层 box-shadow，加号四周因此浮着一圈脂粉色的
+   晕。它本意是呼应光斑的荧光感，但光斑是渲染在 WebGL 里的
+   真弥散，而 box-shadow 只能堆出一圈均匀的轮廓，两者放在
+   一起反而显得脸。去掉之后它就是一个干净的标记。 */
 .cluster-dot::before,
 .cluster-dot::after {
   content: '';
@@ -119,10 +197,6 @@
   top: 50%;
   left: 50%;
   background: currentColor;
-  /* 光晕跟着笔画走，而不是套在整个方形容器外 */
-  box-shadow:
-    0 0 4px 0 currentColor,
-    0 0 10px 0 currentColor;
 }
 
 /* 横笔画 */
@@ -209,33 +283,54 @@
   text-align: right;
 }
 
+/* 默认是灰的，只有被悬停的那一条转成墨黑。
+   不用 opacity 做明暗——整条一起变淡会让编号和年份也糊掉；
+   逐个元素给 color，层级关系（标题重、编号轻）才能始终保持。 */
 .mote-index li {
   display: flex;
   align-items: baseline;
   justify-content: flex-end;
   gap: 14px;
-  transition:
-    opacity 0.6s var(--ease-memory),
-    transform 0.6s var(--ease-memory);
-  opacity: 0.5;
+  transition: transform 0.6s var(--ease-memory);
+  /* 整个 overlay 是 pointer-events: none 的，这里单独放开，
+     文字才能接住 hover 与点击 */
+  pointer-events: auto;
+  cursor: none;
 }
 
 .mote-index li.is-hot {
-  opacity: 1;
   transform: translateX(-7px);
 }
 
 .mote-index__title {
   font-family: var(--font-serif);
   font-size: clamp(15px, 1.5vw, 20px);
-  color: var(--ink);
+  color: var(--ink-faint);
   letter-spacing: 0.01em;
+  /* 与光斑亮起的节奏一致：进入 0.35s，离开 0.65s。
+     transition 只能给一个时长，取中间值 0.5s。 */
+  transition: color 0.5s var(--ease-memory);
+}
+
+.mote-index li.is-hot .mote-index__title {
+  color: var(--ink);
+}
+
+/* 编号与年份跟着一起走，但始终比标题淡一档 */
+.mote-index li .archive-tag,
+.mote-index__year {
+  color: var(--ink-trace);
+  transition: color 0.5s var(--ease-memory);
+}
+
+.mote-index li.is-hot .archive-tag,
+.mote-index li.is-hot .mote-index__year {
+  color: var(--ink-faint);
 }
 
 .mote-index__year {
   font-family: var(--font-mono);
   font-size: 10px;
-  color: var(--ink-ghost);
   letter-spacing: 0.12em;
   min-width: 30px;
 }
@@ -529,5 +624,9 @@
 /* ============================ 动效降级 ============================ */
 
 html[data-reduced-motion='true'] .archive-title__rule {
+  animation: none;
+}
+
+html[data-reduced-motion='true'] .scroll-cue__diamond {
   animation: none;
 }

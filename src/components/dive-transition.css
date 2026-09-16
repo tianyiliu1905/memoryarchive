@@ -21,12 +21,16 @@
   background: #fff;
 }
 
-.dive__streak {
+/* 网状生长层。
+
+   铺满整屏，压在膨胀的液滴之上（按文档顺序天然如此）。
+   内部尺寸由 JS 按 devicePixelRatio 设定，这里只负责
+   把它拉到 CSS 像素的全屏，两者配合才不会发虚。 */
+.dive__net {
   position: absolute;
-  transform-origin: 0 50%;
-  border-radius: 2px;
-  filter: blur(0.4px);
-  will-change: transform, width, opacity;
+  inset: 0;
+  width: 100%;
+  height: 100%;
 }
 
 .dive__bleed {
@@ -42,4 +46,9 @@
   transform: translate(-50%, -50%);
   color: var(--ink-soft);
   white-space: nowrap;
+  /* 中文不走 archive-tag 的大写转换，
+     否则 text-transform 对它无效但字号会偏小 */
+  font-family: var(--font-sans);
+  font-size: 11px;
+  text-transform: none;
 }

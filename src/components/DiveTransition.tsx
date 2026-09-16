@@ -1,15 +1,16 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useArchive } from '@/store/archive';
+import { DiveNetwork } from './DiveNetwork';
 import './dive-transition.css';
 
 /**
  * 潜入记忆 / 浮出水面的转场。
  *
  * 不是路由切换，是「被吸入一段记忆」：
- *   1. 光斑从点击点急速膨胀至全屏（液体在镜头前炸开）
- *   2. 一道白光过曝
- *   3. 粒子被拉成方向性的拖影
+ *   1. 一张网状结构从点击处迸开，瞬间蔓延至全屏
+ *   2. 光斑跟着膨胀，颜色满上来
+ *   3. 一道白光过曝
  *   4. 项目主色从光斑色中析出，渗进纸面
  *   5. 详情页第一帧从模糊中显影
  */
@@ -42,24 +43,6 @@ export function DiveTransition() {
     return () => clearTimeout(t);
   }, [surfacing, ascend, reducedMotion]);
 
-  // 拖影粒子：从中心向外放射，制造方向感
-  const streaks = useMemo(
-    () =>
-      Array.from({ length: 26 }, (_, i) => {
-        const angle = (i / 26) * Math.PI * 2 + (i % 3) * 0.3;
-        const dist = 34 + ((i * 37) % 46);
-        return {
-          id: i,
-          angle,
-          dist,
-          delay: (i % 7) * 0.026,
-          len: 40 + ((i * 53) % 130),
-          thin: 0.6 + ((i * 17) % 10) / 9,
-        };
-      }),
-    []
-  );
-
   const ox = `${origin[0] * 100}%`;
   const oy = `${origin[1] * 100}%`;
 
@@ -83,13 +66,21 @@ export function DiveTransition() {
                 ? { scale: 0.02, opacity: 0.9, filter: 'blur(6px)' }
                 : { scale: 26, opacity: 0.5, filter: 'blur(60px)' }
             }
+            /* 潜入时把前半段的不透明度压下来，给网让路。
+
+               网只用 400ms 就铺满全屏，而液滴要 1.15s 才炸开。
+               液滴若一上来就是 0.9，网还在生长的那段时间里
+               已经被一团实色盖住了，等于白画。压到 0.35 之后
+               它退成网背后的一层底色，等网长完再涨上来接手。 */
             animate={
               diving
-                ? { scale: 34, opacity: [0.9, 0.85, 0.4], filter: 'blur(70px)' }
+                ? { scale: 34, opacity: [0.35, 0.8, 0.4], filter: 'blur(70px)' }
                 : { scale: 0.05, opacity: 0, filter: 'blur(10px)' }
             }
             transition={{
               duration: reducedMotion ? 0.3 : diving ? 1.15 : 0.9,
+              // 0.35 处约合 400ms，正好接在网铺满的那一刻
+              times: diving ? [0, 0.35, 1] : undefined,
               ease: diving ? [0.72, 0, 0.24, 1] : [0.16, 1, 0.3, 1],
             }}
           />
@@ -106,33 +97,12 @@ export function DiveTransition() {
             }}
           />
 
-          {/* ---- 3. 粒子拖影 ---- */}
-          {!reducedMotion &&
-            diving &&
-            streaks.map((s) => (
-              <motion.span
-                key={s.id}
-                className="dive__streak"
-                style={{
-                  left: ox,
-                  top: oy,
-                  background: `linear-gradient(90deg, transparent, ${color}, transparent)`,
-                  height: `${s.thin}px`,
-                  rotate: `${(s.angle * 180) / Math.PI}deg`,
-                }}
-                initial={{ width: 0, opacity: 0, x: 0 }}
-                animate={{
-                  width: [0, s.len, s.len * 0.4],
-                  opacity: [0, 0.85, 0],
-                  x: [0, s.dist * 7, s.dist * 15],
-                }}
-                transition={{
-                  duration: 1.0,
-                  delay: s.delay,
-                  ease: [0.3, 0, 0.2, 1],
-                }}
-              />
-            ))}
+          {/* ---- 3. 网状生长 ----
+               只在潜入时出现。浮出是「退回去」，再长一张网
+               会把两个方向的叙事混在一起。 */}
+          {diving && (
+            <DiveNetwork color={color} origin={origin} reducedMotion={reducedMotion} />
+          )}
 
           {/* ---- 4. 色彩渗透 ---- */}
           <motion.div
@@ -153,7 +123,7 @@ export function DiveTransition() {
               animate={{ opacity: [0, 0.7, 0], letterSpacing: '0.2em' }}
               transition={{ duration: 1.2, times: [0, 0.5, 1] }}
             >
-              entering memory
+              正在进入这段记忆
             </motion.span>
           )}
         </motion.div>
