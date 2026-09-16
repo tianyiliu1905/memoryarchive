@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Basin } from './Basin';
+import { BasinRing } from './BasinRing';
 import { MoteCluster } from './MoteCluster';
 import { CameraRig } from './CameraRig';
 import { HitZones } from './HitZones';
@@ -35,6 +36,7 @@ export function MemoryBasinScene({ pointer, diveCharge, panAmount, dragGuard }: 
     >
       <CameraRig pointer={pointer} diveCharge={diveCharge} panAmount={panAmount} />
       <Basin pointer={pointer} />
+      <BasinRing />
 
       {CLUSTER_ORDER.map((id) => (
         <MoteCluster
