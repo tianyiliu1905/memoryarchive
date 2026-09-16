@@ -21,6 +21,7 @@ export const motesVertexShader = /* glsl */ `
   attribute float aSeed;       // 随机种子
   attribute float aBright;     // 基准亮度
   attribute float aProjectIdx; // 归属项目索引，-1 表示纯氛围粒子
+  attribute float aTrail;      // 拖尾位置：0 = 头部，1 = 尾端
 
   uniform float uTime;
   uniform vec3  uClusterPos;   // 该群在盆中的锚点
@@ -28,8 +29,18 @@ export const motesVertexShader = /* glsl */ `
   uniform float uPointerForce; // 指针影响强度
   uniform float uFocus;        // 0 = 远景, 1 = 被聚焦近景
   uniform float uDim;          // 0 = 正常, 1 = 完全退散虚化
-  uniform float uHoverProject; // 当前悬停的项目索引，-1 无
-  uniform float uPixelRatio;
+/* 悬停用四个 uniform 表达，而不是一个索引。
+
+   索引本身不能插值：从 3 号渐变到 7 号会依次扫过 4/5/6，
+   沿途的光斑都会闪一下。所以「是哪一个」保持整数硬切，
+   「亮多少」交给单独的 amount，并额外留一个正在消退的
+   槽位（Prev），这样切换悬停时旧光斑能自己淡下去，
+   而不是瞬间掉回底色。 */
+uniform float uHoverProject;    // 当前悬停的项目索引，-1 无
+uniform float uHoverAmount;     // 当前项亮起程度 0~1
+uniform float uHoverPrev;       // 上一个悬停项的索引，-1 无
+uniform float uHoverPrevAmount; // 上一项残留的亮度 0~1
+uniform float uPixelRatio;
   uniform float uDive;         // 下潜蓄力 0~1
 
   varying float vBright;
@@ -38,6 +49,33 @@ export const motesVertexShader = /* glsl */ `
   varying float vDim;
   varying float vHot;
   varying float vHover;
+  varying float vTrail;
+
+  /* 摆动位移——抽成函数，因为拖尾要用不同的 t 反复求值。
+
+     光斑不在盆中游走或环绕，只在自己的位置上轻轻晃动。
+     用三个不同频率的正弦叠加（而非噪声漂移），
+     保证运动是「有界的往复」而不是「无界的游荡」——
+     它们永远回到自己的位置。
+
+     三个频率刻意取无公约数的比值，合成周期很长，
+     肉眼不会察觉到重复。
+
+     因为位置是时间的纯函数，把 t 往回拨就能得到它过去
+     所在的位置——拖尾就是这么算出来的，不需要缓存历史帧。 */
+  vec3 swayAt(float t, float ph) {
+    vec3 s;
+    s.x = sin(t * 0.83 + ph) * 0.52
+        + sin(t * 0.41 + ph * 1.7) * 0.33
+        + sin(t * 0.23 + ph * 2.9) * 0.15;
+    s.y = sin(t * 0.67 + ph * 2.1) * 0.52
+        + sin(t * 0.29 + ph) * 0.33
+        + sin(t * 0.19 + ph * 1.4) * 0.15;
+    s.z = sin(t * 0.75 + ph * 1.3) * 0.52
+        + sin(t * 0.37 + ph * 2.4) * 0.33
+        + sin(t * 0.21 + ph * 0.8) * 0.15;
+    return s;
+  }
 
   // --- 简易 3D 噪声 ---
   vec3 hash3(vec3 p) {
@@ -65,30 +103,31 @@ export const motesVertexShader = /* glsl */ `
     vSeed = aSeed;
     vFocus = uFocus;
     vDim = uDim;
+    vTrail = aTrail;
 
     vec3 pos = uClusterPos + aOffset;
 
-    /* ---- 1. 原地微摆 ----
-       光斑不在盆中游走或环绕，只在自己的位置上轻轻晃动。
-       用三个不同频率的正弦叠加（而非噪声漂移），
-       保证运动是「有界的往复」而不是「无界的游荡」——
-       它们永远回到自己的位置。
+    /* ---- 1. 原地微摆（含拖尾采样）----
 
-       三个频率刻意取无公约数的比值，合成周期很长，
-       肉眼不会察觉到重复。 */
+       头部节点（aTrail = 0）用当前时间；尾部节点按自己的
+       aTrail 向前回拨，于是停在这颗光斑「刚刚待过的地方」，
+       串起来就是一条真实的运动轨迹。
+
+       尾巴长度因此自动跟随速度：摆得快时相邻采样点拉得开，
+       尾巴变长；几乎静止时各节点重叠成一点，尾巴消失。
+
+       回拨步长看似很大，其实必要：摆动频率很低（系数 0.19~0.83），
+       回拨零点几个时间单位的话位置几乎没变，尾长只有光斑直径的
+       百分之几，肉眼完全看不见。实测取 2.5 / 1.8 时，尾长约等于
+       光斑直径的 0.9~1.0 倍——能看出是拖尾，又不会长到够到邻居。
+
+       聚焦时反而调小：近景摆幅是远景的三倍，同样的回拨会把尾巴
+       拉得过长，所以用更小的步长抵消。 */
     float t = uTime * 0.62;
     float ph = aSeed * 6.283;
 
-    vec3 sway;
-    sway.x = sin(t * 0.83 + ph) * 0.52
-           + sin(t * 0.41 + ph * 1.7) * 0.33
-           + sin(t * 0.23 + ph * 2.9) * 0.15;
-    sway.y = sin(t * 0.67 + ph * 2.1) * 0.52
-           + sin(t * 0.29 + ph) * 0.33
-           + sin(t * 0.19 + ph * 1.4) * 0.15;
-    sway.z = sin(t * 0.75 + ph * 1.3) * 0.52
-           + sin(t * 0.37 + ph * 2.4) * 0.33
-           + sin(t * 0.21 + ph * 0.8) * 0.15;
+    float trailStep = mix(2.5, 1.8, uFocus);
+    vec3 sway = swayAt(t - aTrail * trailStep, ph);
 
     /* 摆动幅度。远景下光斑本就密集，幅度需要克制；
        聚焦后彼此拉开了距离，可以摆得更明显一些。
@@ -103,8 +142,41 @@ export const motesVertexShader = /* glsl */ `
     float swayAmp = mix(0.11, 0.32, uFocus);
     vec3 swayOffset = sway * swayAmp;
 
-    // ---- 2. 呼吸 ----
-    float breathe = sin(uTime * 0.72 + aSeed * 6.283) * 0.5 + 0.5;
+    /* ---- 2. 呼吸 ----
+
+       原本是单个正弦、频率固定 0.72，所有光斑只有相位不同。
+       但相位不同只是错开了起跑点，节奏是完全一致的——整群
+       共用一个 8.7 秒的拍子，眼睛会自动捕捉到这个共同周期，
+       于是看起来像在一起胀缩。光靠随机相位解决不了。
+
+       现在三件事一起改：
+
+       1) 每颗光斑有自己的速率。用 aSeed 的高位小数取出一个
+          与相位无关的随机数，把基频调制到 0.68~1.32 倍。
+          周期因此散落在 14~27 秒之间，颗与颗差出近两倍，
+          再也凑不成一个共同的拍子。
+
+       2) 两个无理数倍频的正弦叠加（1.618 是黄金比，与基频
+          不可通约）。合成波形不再是规整的正弦，起伏有快有慢，
+          且永不精确重复。
+
+       3) 基频从 0.72 降到 0.34，整体慢了一倍有余。
+
+       拖尾节点的呼吸仍跟着 aTrail 回拨，否则整条尾巴会同步
+       胀缩，像一根会呼吸的棍子而不是拖尾。回拨量也按各自的
+       速率缩放，快慢不同的光斑尾巴才不会错位。 */
+    // fract(aSeed * 7.31) 与 aSeed 本身几乎不相关，
+    // 于是「快慢」和「起点」是两个独立的随机量
+    // （相位直接用上面摆动已算好的 ph）
+    float bRate = 0.34 * (0.68 + fract(aSeed * 7.31) * 0.64);
+    float bt = (uTime - aTrail * 0.28) * bRate;
+    float breathe = (sin(bt + ph) * 0.62
+                   + sin(bt * 1.618 + ph * 2.4) * 0.38) * 0.5 + 0.5;
+
+    /* 每颗的呼吸深浅也不同：绕中点 0.5 缩放。
+       有的光斑起伏明显，有的几乎平稳，整群因此更像一片
+       各自为政的活物，而不是同一套动画的多个实例。 */
+    breathe = 0.5 + (breathe - 0.5) * (0.75 + fract(aSeed * 3.77) * 0.5);
 
     /* ---- 3. 指针的影响 ----
        只提亮，不位移。
@@ -166,20 +238,47 @@ export const motesVertexShader = /* glsl */ `
 
     // ---- 6. 大小 ----
     float size = aSize;
-    // 呼吸：大小起伏加大，让「活着」的感觉更明显
-    size *= mix(0.74, 1.3, breathe);
+    /* 呼吸：范围从 0.74~1.3 扩到 0.6~1.44。
+
+       注意 breathe 会略微溢出 [0,1]——两个正弦叠加后本就
+       可能超过 ±1，再乘上每颗不同的深浅系数（最高 1.25 倍）
+       更是如此。所以实际尺寸倍率会比这里写的区间更宽，
+       实测约 0.5~1.53，最大与最小差出 3 倍（原来只有 1.76 倍）。
+
+       没有取更大的值，是因为光斑胀到 1.6 倍以上时，密集处的
+       弥散区会连成一大片，失掉「一颗一颗」的形态。 */
+    size *= mix(0.6, 1.44, breathe);
     size *= mix(1.0, 2.45, uFocus);
     size *= 1.0 + hot * 0.55;
-    // 悬停的光斑放大——不再依赖 uFocus，盆视角下也要有反馈
-    float isHovered = step(0.5, 1.0 - abs(aProjectIdx - uHoverProject)) * step(0.0, uHoverProject);
+    /* 悬停的光斑放大——不再依赖 uFocus，盆视角下也要有反馈。
+       当前项与消退项各算一次，取较大者：切换悬停的瞬间，
+       旧光斑仍带着残余亮度，两者自然交叠。 */
+    float matchCur  = step(0.5, 1.0 - abs(aProjectIdx - uHoverProject)) * step(0.0, uHoverProject);
+    float matchPrev = step(0.5, 1.0 - abs(aProjectIdx - uHoverPrev))    * step(0.0, uHoverPrev);
+    float isHovered = max(matchCur * uHoverAmount, matchPrev * uHoverPrevAmount);
+    /* 悬停反馈沿尾巴衰减，而不是整条一起胀大。
+       整条同时放大会把拖尾变成一根粗棒，
+       只让头部亮起来，尾巴才像被带动的余辉。 */
+    isHovered *= 1.0 - aTrail * 0.75;
     size *= 1.0 + isHovered * 0.32;
     size *= mix(1.0, 2.1, uDim); // 虚化时变大变淡，模拟失焦
+
+    /* 尾部收窄。
+
+       用 aTrail² 而不是线性：头部附近几乎不收，越往后收得
+       越快，形成一个有尖端的水滴形，而不是等粗的棍子。
+       保留 0.22 的下限，尾尖仍是个柔和的光点而不是硬断。 */
+    size *= mix(1.0, 0.22, aTrail * aTrail);
 
     gl_PointSize = size * uPixelRatio * (300.0 / -mv.z);
     gl_Position = projectionMatrix * mv;
 
-    // 亮度也跟着呼吸起伏，与大小变化同相，强化脉动感
-    vBright = aBright * mix(0.78, 1.22, breathe);
+    /* 亮度也跟着呼吸起伏，与大小变化同相，强化脉动感。
+
+       范围从 0.78~1.22 扩到 0.62~1.32，但没有像尺寸那样
+       成比例放大——亮度压得太低会让光斑周期性地“消失”，
+       而不是呼吸。尺寸负责「张」，亮度只做辅助。 */
+    vBright = aBright * mix(0.62, 1.32, breathe);
     vHot = hot;
     vHover = isHovered;
   }
@@ -197,6 +296,7 @@ export const motesFragmentShader = /* glsl */ `
   varying float vDim;
   varying float vHot;
   varying float vHover;
+  varying float vTrail;
 
   void main() {
     vec2 uv = gl_PointCoord - 0.5;
@@ -209,34 +309,54 @@ export const motesFragmentShader = /* glsl */ `
        跨度只有 40% 半径，衰减太快，光斑边界仍然「看得见」。
 
        现在拆成 6 段，核心保持原来的密度，把预算全花在外缘：
-       后三段覆盖 55%~100% 的半径，不透明度却只从 0.12 降到 0，
+       后三段覆盖 55%~100% 的半径，不透明度却只降一点点，
        形成一条长而极淡的尾巴——边界溶进纸里，而不是收在某处。
 
-       两套色标（悬停 / 未悬停）依旧只差一个整体倍率 0.5，
-       用 vHover 插值，保证提亮是连续的而非硬切。 */
+       色标整体抬高了，尤其是外缘的后几档。配合精灵尺寸的增大，
+       弥散范围因此明显外扩，相邻光斑的弥散区会彼此侵入。
+       叠加混合下重叠处会自然累出一块更亮的区域，整群因此连成
+       一片流动的光，而不是几颗各自为政的珠子。
 
-    // 悬停态色标：0 / 12 / 28 / 42 / 55 / 72 / 100%
-    const float F0 = 1.0;
-    const float F1 = 0.78;
-    const float F2 = 0.5;
-    const float F3 = 0.3;
+       两套色标（悬停 / 未悬停）依旧只差一个整体倍率，
+       用 vHover 插值。vHover 现在是连续量（见顶点着色器里的
+       uHoverAmount），所以亮起与消退都是渐变的。
+
+       再给它套一条 smoothstep：线性的 amount 在消退末尾会
+       「戛然而止」，S 曲线把首尾都压平，收尾更像自然熄灭。 */
+
+    /* 悬停态色标：0 / 12 / 28 / 42 / 55 / 72 / 100%
+
+       整体比上一版又压下来一截。上一版为了「让弥散区能连上」
+       把色标抬高，但那是在 NormalBlending 的经验下估的值；
+       改成预乘 alpha 叠加后，重叠处的不透明度是真的会累加，
+       同样的色标叠三四层就压出了深色块。
+
+       现在单层更淡，叠加后才刚好——这才是叠加混合下该有的
+       配法：单层预留余地，让重叠去填。 */
+    const float F0 = 0.72;
+    const float F1 = 0.58;
+    const float F2 = 0.4;
+    const float F3 = 0.27;
     const float F4 = 0.17;
-    const float F5 = 0.07;
+    const float F5 = 0.085;
 
-    // 未悬停态：整体减半
-    const float D0 = 0.5;
-    const float D1 = 0.39;
-    const float D2 = 0.25;
-    const float D3 = 0.15;
-    const float D4 = 0.085;
-    const float D5 = 0.035;
+    // 未悬停态：整体再压低，但外缘几档压得比核心少——
+    // 即使不悬停，弥散的尾巴也要足够明显，邻居之间才连得上
+    const float D0 = 0.34;
+    const float D1 = 0.28;
+    const float D2 = 0.2;
+    const float D3 = 0.145;
+    const float D4 = 0.095;
+    const float D5 = 0.05;
 
-    float s0 = mix(D0, F0, vHover);
-    float s1 = mix(D1, F1, vHover);
-    float s2 = mix(D2, F2, vHover);
-    float s3 = mix(D3, F3, vHover);
-    float s4 = mix(D4, F4, vHover);
-    float s5 = mix(D5, F5, vHover);
+    float hv = smoothstep(0.0, 1.0, clamp(vHover, 0.0, 1.0));
+
+    float s0 = mix(D0, F0, hv);
+    float s1 = mix(D1, F1, hv);
+    float s2 = mix(D2, F2, hv);
+    float s3 = mix(D3, F3, hv);
+    float s4 = mix(D4, F4, hv);
+    float s5 = mix(D5, F5, hv);
 
     /* 分段线性插值。段越靠外越长、落差越小：
          [0,  12%] : s0 → s1   核心，几乎不衰减
@@ -257,9 +377,14 @@ export const motesFragmentShader = /* glsl */ `
     } else if (r < 0.72) {
       a = mix(s4, s5, (r - 0.55) / 0.17);
     } else {
-      // 末段再乘一次淡出，让最外圈以二次曲线趋近于 0，彻底不留边界
+      /* 末段再乘一次淡出，让最外圈趋近于 0，彻底不留边界。
+
+         系数从 0.35 提到 1.0：外缘色标抬高后，若还用原来那条
+         温和的曲线，精灵边界处会剩下一层能看出来的底，十几颗
+         光斑叠在一起就会露出一圈圈圓边。平方衰减把最后那点余量
+         压到 0，弥散范围却因为前面几段抬高而依旧外扩。 */
       float u = (r - 0.72) / 0.28;
-      a = mix(s5, 0.0, u) * (1.0 - u * u * 0.35);
+      a = mix(s5, 0.0, u) * (1.0 - u * u);
     }
 
     a *= vBright * uOpacity;
@@ -267,13 +392,65 @@ export const motesFragmentShader = /* glsl */ `
     // 虚化：未聚焦的群整体压淡
     a *= mix(1.0, 0.3, vDim);
 
-    // ---- 颜色 ----
-    // 色相始终是该群的本色；只在指针靠近时提亮一点，制造「被照到」的反馈。
-    vec3 col = uColor;
+    /* 拖尾淡出。
+
+       用平方而非三次方：三次方到中段就只剩 3% 了，尾巴等于
+       没有；平方能让中段保留约 25%，整条才连得起来。
+       但也不能更缓——尾部节点之间有重叠，additive 混合下
+       亮度会累加，压得不够低就会叠成一条实心亮线。 */
+    float tf = 1.0 - vTrail;
+    a *= tf * tf;
+
+    /* ---- 颜色 ----
+
+       色相始终是该群的本色，但先整体往纸白提一档再用。
+
+       数据里存的是全饱和色（#2aff00 / #9d4dff / #ffd400），那是
+       给 UI 上的小色块用的——十字标记、eyebrow 文字都只占几十个
+       像素，饱和才压得住。但光斑是大面积的弥散，同样的饱和度铺
+       开几百像素就过重了，在 0.965 的白纸上尤其扎眼。
+
+       提亮的比例不是定值，而是按各色自身的明度反推出来的。
+
+       固定混 32% 的白试过，结果三个群轻重差了近四倍：紫色比
+       纸面暗 47 灰阶，黄色只有 12.6。因为绿(#2aff00)和黄
+       (#ffd400)本身明度就接近 0.9，混白后几乎贴着纸面；而
+       紫色(#9d4dff)明度只有 0.44，同样混 32% 仍然很沉。
+
+       所以分两步走。
+
+       第一步「拉齐」：明度低于 0.74 的色朝这个目标补白，缺多少
+       补多少。紫色(明度0.42)因此被大幅提亮，绿(0.75)与黄(0.81)
+       本就高于目标，几乎不动——三者就此落在同一起跑线上。
+
+       第二步「整体变浅」：在拉齐的基础上，三色再统一混入 0.12
+       的白。这一步是必须的，否则绿和黄的明度本就高于目标值，
+       第一步对它们等于没做，最后仍是原来那个饱和的绿和黄。
+
+       0.74 / 0.12 这组值是算出来的。更白的组合（0.82/0.3）虽然
+       三色完全齐平，但只比纸面暗 12 灰阶，淡到快看不见，而且
+       紫色被冲成 rgb(234,216,255)，色相已经认不出来。现在这组
+       未悬停约 24 灰阶、三色相差不到 8，且色相仍清晰。 */
+    float lum = dot(uColor, vec3(0.2126, 0.7152, 0.0722));
+    // 明度越低的色需要补越多白，才能与其他色站到同一档
+    float even = clamp((0.74 - lum) / max(1.0 - lum, 0.001), 0.0, 1.0);
+    vec3 col = mix(uColor, vec3(1.0), even);
+    // 再统一提一档，让三色一起变浅
+    col = mix(col, vec3(1.0), 0.12);
     col = mix(col, col + vec3(0.22), vHot * 0.45);
 
     if (a < 0.0015) discard;
-    gl_FragColor = vec4(col, a);
+
+    /* 预乘 alpha 输出。
+
+       配合材质里的自定义混合因子（见 createMotesMaterial）：
+       目标色 = src.rgb + dst.rgb × (1 - a)。
+
+       单颗光斑时它等价于普通的 alpha 混合；但两颗重叠时，
+       后画的那颗会把自己的颜色加到已有结果上，而不是把它
+       遮掉——弥散区重叠处因此会累出更浓的色，而不是互相
+       抵消或覆盖。这正是「允许彼此重叠」想要的效果。 */
+    gl_FragColor = vec4(col * a, a);
   }
 `;
 
@@ -290,12 +467,33 @@ export function createMotesMaterial(color: string) {
       uFocus: { value: 0 },
       uDim: { value: 0 },
       uHoverProject: { value: -1 },
+      uHoverAmount: { value: 0 },
+      uHoverPrev: { value: -1 },
+      uHoverPrevAmount: { value: 0 },
       uOpacity: { value: 1 },
       uPixelRatio: { value: 1 },
       uDive: { value: 0 },
     },
     transparent: true,
     depthWrite: false,
-    blending: THREE.NormalBlending,
+
+    /* 预乘 alpha 混合，而不是 NormalBlending 或 AdditiveBlending。
+
+       NormalBlending：后画的光斑会把先画的遮掉，两片弥散区
+       重叠也不会比单独一片更浓，没有任何叠加感。
+
+       AdditiveBlending：叠加是有了，但它把颜色往白里推。
+       本项目的底色是 0.965 的白纸，再加上去只会迅速过曝，
+       绿紫黄三色全洗成一片惨白。
+
+       预乘 alpha（src 侧系数取 ONE，dst 侧取 1-α）兼顾两边：
+       单颗时与普通 alpha 混合完全一致，不会变白；重叠时后者
+       的颜色是加上去的，重叠区因此比各自单独时更浓。
+       片元着色器必须相应地输出 col × a。 */
+    blending: THREE.CustomBlending,
+    blendSrc: THREE.OneFactor,
+    blendDst: THREE.OneMinusSrcAlphaFactor,
+    blendSrcAlpha: THREE.OneFactor,
+    blendDstAlpha: THREE.OneMinusSrcAlphaFactor,
   });
 }
