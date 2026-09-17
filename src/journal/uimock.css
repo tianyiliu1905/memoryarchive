@@ -1,0 +1,351 @@
+/* ================= 界面复刻 =================
+
+   核心原则：只借结构，不借皮肤。
+
+   真实产品界面往往是纯白底、彩色按钮、明显投影。那套东西
+   照搬进来，会在这本以纸面为底的档案里变成一块"贴纸"——
+   边界清晰、材质不同、一眼看出是外来的。
+
+   所以这里的做法是把界面"画"在纸上：
+   - 底色用 --paper-warm，比纸面略深一点点，而不是纯白
+   - 所有线条走 --ink-ghost / --ink-trace，是铅笔线不是 UI 描边
+   - 不用投影，只用一道极淡的边框界定范围
+   - 圆角收到 3px，接近纸上徒手画方框的感觉
+
+   结果是它读起来像档案里的一张示意图，
+   和旁边的 Plate（canvas 生成的抽象图）属于同一种材质。 */
+
+.uimock {
+  margin: 0;
+  width: 100%;
+}
+
+.uimock__frame {
+  border: 1px solid var(--ink-ghost);
+  border-radius: 3px;
+  background: var(--paper-warm);
+  overflow: hidden;
+  /* 不用 box-shadow。投影会让这块"浮"起来，
+     而纸上的示意图应该是平的、嵌在页面里的 */
+}
+
+/* ---- 标题栏 ---- */
+.uimock__bar {
+  display: flex;
+  align-items: center;
+  gap: 0.7em;
+  padding: 0.5em 0.8em;
+  border-bottom: 1px solid var(--ink-trace);
+  background: var(--paper-deep);
+}
+
+/* macOS 红绿灯。刻意不上原色——那三个饱和圆点是整个界面里
+   最抢眼的东西，会把视线从结构上拉走。这里只是三个墨色小圈，
+   足够让人认出"这是个窗口"，仅此而已 */
+.uimock__dots {
+  display: flex;
+  gap: 4px;
+}
+.uimock__dots i {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--ink-ghost);
+}
+
+.uimock__bar-title {
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  color: var(--ink-soft);
+}
+
+.uimock__badge {
+  margin-left: auto;
+  font-size: 0.56rem;
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+
+/* ---- 主体 ---- */
+/* min-height 只是防止内容极少时窗口塌成一条细缝，
+   不该参与撑高。10em 已经够让空窗口看起来像个窗口，
+   而内容比这多时它完全不起作用。
+
+   压到 10em 是有原因的：章节是 height:100% 的横向卷轴，
+   纵向溢出会被直接裁掉。两个窗口上下叠放时，
+   14em 的下限会让 1280×720 这类屏幕超出约 50px。 */
+.uimock__body {
+  display: grid;
+  grid-template-columns: 8.4em minmax(0, 1fr);
+  min-height: 10em;
+}
+/* 没有侧边栏时内容区通栏——用来表现"进来就是一片广场"的旧结构 */
+.uimock__frame.is-plain .uimock__body {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* ---- 侧边栏 ---- */
+/* 侧边栏的底色用 rgba 直写而非 color-mix。
+
+   全站其他地方一次都没用过 color-mix，--ink-* 系列本身就是
+   直写的 rgba(22, 21, 26, x)。这里跟随同一写法，
+   兼容面也更宽。 */
+.uimock__side {
+  border-right: 1px solid var(--ink-trace);
+  padding: 0.7em 0;
+  background: rgba(22, 21, 26, 0.02);
+}
+
+.uimock__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0 0.85em 0.7em;
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: var(--ink);
+}
+.uimock__brand i {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  opacity: 0.85;
+}
+
+.uimock__nav {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.uimock__nav-group {
+  padding: 0.75em 0.85em 0.3em;
+  font-size: 0.52rem;
+  color: var(--ink-faint);
+}
+
+.uimock__nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.33em 0.85em;
+  font-size: 0.68rem;
+  color: var(--ink-soft);
+}
+
+/* 当前项：一道主色竖条 + 极淡底色。
+   比整行反白更克制，在示意图里不会形成一块硬色块 */
+.uimock__nav-item.is-on {
+  background: rgba(22, 21, 26, 0.04);
+}
+.uimock__nav-mark {
+  position: absolute;
+  left: 0;
+  top: 0.28em;
+  bottom: 0.28em;
+  width: 2px;
+  border-radius: 0 2px 2px 0;
+}
+
+.uimock__nav-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.uimock__nav-trail {
+  margin-left: auto;
+  font-size: 0.56rem;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- 内容区 ---- */
+.uimock__main {
+  padding: 0.9em 1em 1.1em;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7em;
+  min-width: 0;
+}
+
+.uimock__section {
+  margin: 0;
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+/* ---- 筛选标签 ---- */
+.uimock__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35em;
+}
+.uimock__chip {
+  padding: 0.16em 0.6em;
+  border: 1px solid var(--ink-ghost);
+  border-radius: 999px;
+  font-size: 0.62rem;
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+
+/* ---- 卡片网格 ---- */
+.uimock__cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6em;
+}
+.uimock__card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.22em;
+  padding: 0.5em;
+  border: 1px solid var(--ink-trace);
+  border-radius: 2px;
+  min-width: 0;
+}
+
+/* 缩略图占位：斜纹而非灰块。
+   灰块看起来像"图还没加载出来"，斜纹是制图惯例里的
+   "此处从略"，意思准确得多 */
+.uimock__card-thumb {
+  height: 2.6em;
+  border-radius: 1px;
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      var(--ink-trace) 0 3px,
+      transparent 3px 7px
+    );
+}
+
+.uimock__card-title {
+  font-size: 0.66rem;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.uimock__card-sub,
+.uimock__card-tag {
+  font-size: 0.56rem;
+  color: var(--ink-faint);
+}
+
+/* ---- 列表行 ---- */
+.uimock__rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.uimock__row {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.42em 0;
+  border-bottom: 1px solid var(--ink-trace);
+}
+.uimock__row:last-child {
+  border-bottom: none;
+}
+.uimock__row-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--ink-ghost);
+  flex-shrink: 0;
+}
+.uimock__row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1em;
+  min-width: 0;
+}
+.uimock__row-title {
+  font-size: 0.68rem;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.uimock__row-sub {
+  font-size: 0.56rem;
+  color: var(--ink-faint);
+}
+.uimock__row-tag {
+  margin-left: auto;
+  font-size: 0.56rem;
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+
+/* ---- 静态输入框 ---- */
+.uimock__prompt {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.5em 0.6em;
+  border: 1px solid var(--ink-ghost);
+  border-radius: 3px;
+}
+.uimock__prompt-text {
+  font-size: 0.66rem;
+  color: var(--ink-faint);
+}
+.uimock__prompt-send {
+  margin-left: auto;
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+  opacity: 0.5;
+}
+
+/* ---- 图注 ---- */
+.uimock__caption {
+  margin: 0.7em 0 0;
+  font-size: 0.66rem;
+  line-height: 1.5;
+  color: var(--ink-faint);
+}
+
+/* 并排对照时，「之前」那一侧整体降一档——
+   让视线自然落到「之后」上，对照才有方向。
+
+   这里不能用 opacity：外层 .chapter__mocks 的显影动画正是靠
+   opacity 从 0 过渡到 1 的，子元素再设一次会被父级的合成覆盖，
+   显影结束后两侧就一样亮了。
+
+   改用 filter 的饱和度与对比度：既不参与那条动画，
+   压暗的效果也更像「褪色的旧图」，正合"之前"的语义。 */
+.uimock.is-muted .uimock__frame {
+  filter: grayscale(0.35) contrast(0.88);
+}
+.uimock.is-muted .uimock__caption {
+  color: var(--ink-ghost);
+}
+
+/* ---- 窄屏 ---- */
+@media (max-width: 900px) {
+  .uimock__body {
+    grid-template-columns: 6.6em minmax(0, 1fr);
+  }
+  .uimock__cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  /* 侧边栏收起：窄屏下 6.6em 的导航已经挤得读不出字，
+     不如整个去掉，只留内容区的结构 */
+  .uimock__body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .uimock__side {
+    display: none;
+  }
+}

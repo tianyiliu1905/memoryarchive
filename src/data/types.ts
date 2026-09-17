@@ -17,6 +17,7 @@ export type ChapterKind =
   | 'contrast' // 左右对照：之前 / 之后
   | 'translate' // 工程语言 → 大众语言的对照
   | 'steps' // 编号推进的几步
+  | 'uimock' // 界面复刻：用 DOM 搭出真实结构，而非截图
   /* ---- 资料型：图书馆用，一屏一张表 ---- */
   | 'brief' // 条目开篇：它是什么、怎么用
   | 'table' // 一张表
@@ -102,6 +103,91 @@ export interface StepItem {
   detail: string;
 }
 
+/* ================= 界面复刻（UI Mock）=================
+
+   用 DOM 搭出产品界面的「真实结构」，而不是贴截图、嵌 iframe
+   或放录屏。这样做的理由：
+
+   - 截图会把别处的设计语言（阴影、圆角、品牌色）整块搬进来，
+     和本站的纸面质感打架；缩放时还会糊。
+   - Mock 用的是本站自己的墨色与字体，只借「结构」不借「皮肤」，
+     看起来像一张画在档案里的界面示意图。
+   - 文字是真的，可选中、可检索、任意缩放都清晰。
+   - 能只画要讲的那部分——截图做不到这种取舍。 */
+
+/** 侧边栏里的一项 */
+export interface MockNavItem {
+  /** 显示文字 */
+  label: string;
+  /** 为真时用主色标出，表示当前所在 */
+  active?: boolean;
+  /** 渲染成分组标题（小字、不可点）而非导航项 */
+  group?: boolean;
+  /** 行尾的计数或状态字 */
+  trailing?: string;
+}
+
+/** 内容区的一块。不同形态决定怎么排 */
+export interface MockBlock {
+  kind:
+    | 'toolbar'   // 一排筛选 / 标签
+    | 'cards'     // 卡片网格
+    | 'rows'      // 列表行
+    | 'prompt'    // 输入框（静态，不可输入）
+    | 'section';  // 小标题
+  /** section 的标题文字 */
+  title?: string;
+  /** toolbar 的各项，第一项默认选中 */
+  chips?: string[];
+  /** cards / rows 的条目 */
+  items?: {
+    title: string;
+    /** 副标题或描述 */
+    sub?: string;
+    /** 右侧的状态小字 */
+    tag?: string;
+    /** 用主色标出这一项 */
+    accent?: boolean;
+  }[];
+  /** prompt 的占位文字 */
+  placeholder?: string;
+}
+
+/** 底部标签栏里的一个入口（仅手机形态） */
+export interface MockTabItem {
+  label: string;
+  /** 为真则用主色标出，表示当前所在 */
+  active?: boolean;
+}
+
+/** 一个界面复刻 */
+export interface UiMock {
+  /** 窗口标题栏上的字，如「工作台」 */
+  title: string;
+  /**
+   * 外壳形态。缺省为桌面窗口。
+   *
+   * phone 不只是「窗口变窄」：它换掉了红绿灯、多了状态栏与
+   * 底部标签栏。讨论移动端结构时，那排标签栏本身就是要说的事，
+   * 用桌面窗口的外壳去装会把论点说没。
+   */
+  frame?: 'window' | 'phone';
+  /** 右上角的说明角标。默认「结构示意」，说清楚这不是截图 */
+  badge?: string;
+  /** 侧边栏。缺省则不显示，用于展示「没有导航」的旧结构 */
+  sidebar?: {
+    /** 侧边栏顶部的产品名 */
+    brand?: string;
+    items: MockNavItem[];
+  };
+  /** 内容区的几块 */
+  blocks: MockBlock[];
+  /** 底部标签栏。缺省则不画——「没有标签栏」本身也是一种结构 */
+  tabs?: MockTabItem[];
+  /** 图注，排在窗口下方 */
+  caption?: string;
+}
+
 /** 一张表 */
 export interface TableBlock {
   /** 表头 */
@@ -140,6 +226,8 @@ export interface Chapter {
   table?: TableBlock;
   /** snippet：代码片段 */
   code?: { lang: string; lines: string[] };
+  /** uimock：界面复刻。给两个则左右对照（改版前 / 后） */
+  mocks?: UiMock[];
 }
 
 export interface Project {

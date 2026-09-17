@@ -201,7 +201,7 @@ export const PROJECTS: Project[] = [
         annotation: '在后面修一百次，不如在前面说一次。',
       },
       {
-        kind: 'process',
+        kind: 'uimock',
         marker: '11 / STRUCTURE',
         heading: '首页不该再是一个广场',
         body: [
@@ -210,8 +210,65 @@ export const PROJECTS: Project[] = [
           '所以整体改成了工作台：左侧导航把项目、团队、作品收起来，进来就能接着干。',
         ],
         annotation: '从「网站」变成「工具」，是这次改版真正的分界。',
-        plates: [
-          { index: 'PL.05', caption: '改版后的工作台结构', seed: 2105, variant: 'wireframe', ratio: 1.66 },
+        mocks: [
+          {
+            /* 改版前：没有侧边栏。这不是省略，是当时的真实情况——
+               整个首页就是一个输入框加一片作品瀑布流，
+               没有任何东西承载「我的项目」这个概念 */
+            title: 'Nocode · 改版前',
+            badge: '结构示意',
+            blocks: [
+              { kind: 'prompt', placeholder: '描述你想要的网页…' },
+              { kind: 'toolbar', chips: ['推荐', '最新', '电商', '官网', '工具'] },
+              { kind: 'section', title: '作品广场' },
+              /* 只给一行三张。
+                 这一侧要说明的只是「进来是一片供人浏览的广场」，
+                 一行就够；铺满两行会让整章在 720p 的屏上纵向溢出，
+                 而章节是 height:100% 的横向卷轴，溢出即被裁掉。 */
+              {
+                kind: 'cards',
+                items: [
+                  { title: '生鲜电商首页', sub: '2.4k 浏览' },
+                  { title: '发布会邀请函', sub: '1.8k 浏览' },
+                  { title: '数据看板', sub: '960 浏览' },
+                ],
+              },
+            ],
+            caption: '进来先看别人做了什么——适合被种草，不适合接着干活。',
+          },
+          {
+            /* 改版后：左侧导航把项目、团队、作品分层收起。
+               卡片换成列表行，是因为「继续昨天的事」需要看到
+               状态和时间，而不是缩略图 */
+            title: 'Nocode · 工作台',
+            badge: '结构示意',
+            sidebar: {
+              brand: 'Nocode',
+              items: [
+                { label: '工作台', active: true },
+                { label: '最近', trailing: '12' },
+                { label: '项目', group: true },
+                { label: '商家后台重构', trailing: '4' },
+                { label: '春季活动页', trailing: '2' },
+                { label: '团队', group: true },
+                { label: '增长设计组', trailing: '9' },
+                { label: '模板库' },
+              ],
+            },
+            blocks: [
+              { kind: 'section', title: '继续未完成的' },
+              {
+                kind: 'rows',
+                items: [
+                  { title: '商家后台 · 订单列表', sub: '你 · 20 分钟前', tag: '进行中', accent: true },
+                  { title: '春季活动页 · 主视觉', sub: '林 · 2 小时前', tag: '待合并' },
+                  { title: '商家后台 · 权限设置', sub: '陈 · 昨天', tag: '已合并' },
+                  { title: '数据看板 · 导出模块', sub: '你 · 3 天前', tag: '草稿' },
+                ],
+              },
+            ],
+            caption: '进来就是自己的项目与进度，左侧把项目、团队、作品分层收起。',
+          },
         ],
       },
       {

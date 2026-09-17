@@ -27,6 +27,7 @@
 .chapter__lede,
 .chapter__meta,
 .chapter__plates,
+.chapter__mocks,
 .chapter__annotation {
   opacity: 0;
   filter: blur(10px);
@@ -64,7 +65,8 @@
   transition-delay: 0.5s;
 }
 
-.chapter.is-developed .chapter__plates {
+.chapter.is-developed .chapter__plates,
+.chapter.is-developed .chapter__mocks {
   opacity: 1;
   filter: blur(0);
   transform: none;
@@ -550,6 +552,50 @@
   padding: clamp(40px, 7vh, 80px) 0;
 }
 
+/* ---- 界面复刻 ---- */
+
+.chapter__uimock-wrap {
+  display: flex;
+  align-items: center;
+  gap: clamp(40px, 5.4vw, 96px);
+  height: 100%;
+  padding: clamp(40px, 7vh, 80px) 0;
+}
+
+/* 窗口的宽度用 clamp 而非百分比：
+   界面示意图里的字号是固定的（约 0.66rem），窗口过宽时
+   行长会拉得很难读，过窄则卡片会挤成一条。
+   下限 420px 是「减掉侧栏与内边距后，三列卡片每列还能
+   放下六个中文字」的下限 */
+.chapter__mocks {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: clamp(20px, 2.6vw, 44px);
+  max-width: clamp(420px, 46vw, 620px);
+}
+
+/* 对照时改成上下叠放，而不是左右并排。
+
+   并排试过，算下来不成立：总宽 52vw 分成两份，每个窗口
+   只剩约 350px，减掉 134px 的侧栏和内边距后内容区不足 200px，
+   再切三列卡片——每列不到 60px，标题全部被截断。
+   1024px 视口下更只剩 24px，等于什么都读不出来。
+
+   上下叠放后每个窗口都能拿到完整宽度，字读得清。
+   垂直方向本来就是滚动轴，多一屏的代价远小于读不清。
+   前后关系也没丢：改版前在上、改版后在下，
+   配上前者的褐色调，顺序依旧清楚。 */
+.chapter__mocks.is-pair {
+  flex-direction: column;
+  gap: clamp(18px, 2vw, 32px);
+  max-width: clamp(420px, 46vw, 620px);
+}
+.chapter__mocks.is-pair > * {
+  width: 100%;
+}
+
 .chapter__steps {
   margin: 0;
   padding: 0;
@@ -967,11 +1013,22 @@
   /* 窄屏：变成上下堆叠，不再左右分栏 */
   .chapter__translate,
   .chapter__steps-wrap,
+  .chapter__uimock-wrap,
   .chapter__specs-wrap {
     flex-direction: column;
     align-items: flex-start;
     justify-content: center;
     gap: 26px;
+  }
+
+  /* 窗口改跟随视口。
+     它在宽屏下的下限是 420px，而 768px 视口减去页边距后
+     可用宽已经接近这个值，再坚持固定下限会溢出。
+     改成 82vw 后侧栏也已在 620px 断点收起，内容区反而更宽。 */
+  .chapter__mocks,
+  .chapter__mocks.is-pair {
+    width: 82vw;
+    max-width: 82vw;
   }
 
   .chapter__translate-head,

@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState } from 'react';
 import type { Chapter, MemoryCluster, Project } from '@/data/types';
 import { Plate } from './Plate';
+import { UiMock } from './UiMock';
 import './chapter.css';
 
 interface Props {
@@ -262,6 +263,44 @@ export function ChapterPanel({ chapter, project, accent, index, onExit }: Props)
               </li>
             ))}
           </ol>
+        </div>
+      )}
+
+      {/* ================= 界面复刻 ================= */}
+      {kind === 'uimock' && chapter.mocks && (
+        <div className="chapter__uimock-wrap">
+          <div className="chapter__text" data-parallax="0.12">
+            <span className="chapter__marker archive-tag" style={{ color: accent.colorDeep }}>
+              {chapter.marker}
+            </span>
+            {chapter.heading && <h2 className="chapter__heading">{chapter.heading}</h2>}
+            {chapter.body?.map((p, i) => (
+              <p key={i} className="chapter__para" style={{ ['--p' as string]: i }}>
+                {p}
+              </p>
+            ))}
+            {chapter.annotation && (
+              <aside className="chapter__annotation serif-note" style={{ borderColor: accent.color }}>
+                {chapter.annotation}
+              </aside>
+            )}
+          </div>
+
+          {/* 两个 Mock 则左右对照（改版前 / 后），一个则单独站住。
+              对照时把第一个压暗，视线会自己落到后者上 */}
+          <div
+            className={`chapter__mocks ${chapter.mocks.length > 1 ? 'is-pair' : ''}`}
+            data-parallax="0.035"
+          >
+            {chapter.mocks.map((m, i) => (
+              <UiMock
+                key={i}
+                mock={m}
+                accent={accent.color}
+                muted={chapter.mocks!.length > 1 && i === 0}
+              />
+            ))}
+          </div>
         </div>
       )}
 
