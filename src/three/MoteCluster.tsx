@@ -150,6 +150,8 @@ export function MoteCluster({ cluster, projects, pointer, diveCharge, anchor }: 
   const hoverPrevIdx = useRef(-1);
   const hoverPrevAmt = useRef(0);
   const diveV = useRef(0);
+  /* 整群的上色程度。默认 0，也就是银白。 */
+  const tintV = useRef(0);
 
   useFrame((state, delta) => {
     const m = matRef.current;
@@ -224,6 +226,27 @@ export function MoteCluster({ cluster, projects, pointer, diveCharge, anchor }: 
     u.uHoverAmount.value = hoverAmtV.current;
     u.uHoverPrev.value = hoverPrevIdx.current;
     u.uHoverPrevAmount.value = hoverPrevAmt.current;
+
+    /* ---- 整群上色 ----
+
+       光斑平时是银白的（见 motesMaterial 的颜色段），只有「当下
+       被关注的那一群」才显出本色。这里决定这一群算不算被关注。
+
+       两种情况算：
+         - 盆全景下指针停在这一群上（预告：这就是它的颜色）
+         - 已经进入了这一群（它是此刻唯一在讲的东西）
+
+       只给到 0.72 而不是 1，是为了给单颗的悬停留出余地。
+       整群到顶的话，再悬停某一颗就没有可升的空间了，
+       「指到哪一颗」这层信息会消失在一片同色里。
+
+       插值速度取 2.6，比悬停亮度的 5.5/3.0 慢。颜色的变化比
+       亮度更显眼，走快了会像闪烁；慢一点才像染上去的。 */
+    const clusterSelected =
+      (depth === 'basin' && hoveredCluster === cluster.id) || (inCluster && isFocused);
+    const targetTint = clusterSelected ? 0.72 : 0;
+    tintV.current += (targetTint - tintV.current) * Math.min(1, d * 2.6);
+    u.uClusterTint.value = tintV.current;
 
     // 盆全景时，被悬停的群整体提亮
     const hoverBoost = depth === 'basin' && hoveredCluster === cluster.id ? 1.22 : 1.0;
