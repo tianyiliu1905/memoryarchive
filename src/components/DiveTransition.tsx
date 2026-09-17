@@ -66,33 +66,46 @@ export function DiveTransition() {
                 ? { scale: 0.02, opacity: 0.9, filter: 'blur(6px)' }
                 : { scale: 26, opacity: 0.5, filter: 'blur(60px)' }
             }
-            /* 潜入时把前半段的不透明度压下来，给网让路。
+            /* 潜入时把前半段的不透明度压得很低，给网让路。
 
-               网只用 400ms 就铺满全屏，而液滴要 1.15s 才炸开。
-               液滴若一上来就是 0.9，网还在生长的那段时间里
-               已经被一团实色盖住了，等于白画。压到 0.35 之后
-               它退成网背后的一层底色，等网长完再涨上来接手。 */
+               液滴是一团满屏的实色，只要浓到 0.8，网上那层
+               淡淡的色彩流动就完全看不见了——等于白画。
+
+               所以它的抬升必须等颜色波演完。DiveNetwork 里
+               COLOR_MS 是 640ms、整张网 720ms 退场；这里的
+               第二个关键帧放在 0.62（≈713ms），正好接在
+               网淡出的那一刻把屏幕接过来。
+
+               起手的 0.18 也比以前低：它现在只是网背后一层
+               极淡的底，不再参与前半段的叙事。 */
             animate={
               diving
-                ? { scale: 34, opacity: [0.35, 0.8, 0.4], filter: 'blur(70px)' }
+                ? { scale: 34, opacity: [0.18, 0.82, 0.4], filter: 'blur(70px)' }
                 : { scale: 0.05, opacity: 0, filter: 'blur(10px)' }
             }
             transition={{
               duration: reducedMotion ? 0.3 : diving ? 1.15 : 0.9,
-              // 0.35 处约合 400ms，正好接在网铺满的那一刻
-              times: diving ? [0, 0.35, 1] : undefined,
+              // 0.62 处约合 713ms，正好接在颜色波扫完、网退场的那一刻
+              times: diving ? [0, 0.62, 1] : undefined,
               ease: diving ? [0.72, 0, 0.24, 1] : [0.16, 1, 0.3, 1],
             }}
           />
 
-          {/* ---- 2. 白光过曝 ---- */}
+          {/* ---- 2. 白光过曝 ----
+
+               起点从 0.42 推到 0.5（546ms → 650ms）。
+
+               颜色波在 640ms 扫完，白光原来 546ms 就开始抬亮，
+               会在波冲向屏幕边缘的最后一百毫秒里把它洗掉——
+               那恰恰是「颜色越过边界」最该被看见的一刻。
+               峰值仍留在 0.66，总时长不变，只是让出这一小段。 */}
           <motion.div
             className="dive__flash"
             initial={{ opacity: 0 }}
             animate={{ opacity: diving ? [0, 0, 0.92, 0.7] : [0.4, 0] }}
             transition={{
               duration: reducedMotion ? 0.25 : diving ? 1.3 : 0.75,
-              times: diving ? [0, 0.42, 0.66, 1] : [0, 1],
+              times: diving ? [0, 0.5, 0.66, 1] : [0, 1],
               ease: 'easeInOut',
             }}
           />
@@ -104,12 +117,21 @@ export function DiveTransition() {
             <DiveNetwork color={color} origin={origin} reducedMotion={reducedMotion} />
           )}
 
-          {/* ---- 4. 色彩渗透 ---- */}
+          {/* ---- 4. 色彩渗透 ----
+
+               一层以起点为圆心的 multiply 渐变。潜入时的峰值往后挪
+               （times 第二段 0.62）：它把颜色叠在正中心，而网的叙事
+               恰恰是中心要褪成中性色。两者同时发生就相互抵消了，
+               所以让它等颜色波走完再上来。 */}
           <motion.div
             className="dive__bleed"
             initial={{ opacity: 0 }}
             animate={{ opacity: diving ? [0, 0.28, 0] : [0.2, 0] }}
-            transition={{ duration: reducedMotion ? 0.25 : 1.2, ease: 'easeInOut' }}
+            transition={{
+              duration: reducedMotion ? 0.25 : 1.2,
+              times: diving ? [0, 0.62, 1] : undefined,
+              ease: 'easeInOut',
+            }}
             style={{
               background: `radial-gradient(circle at ${ox} ${oy}, ${color}, transparent 62%)`,
             }}
