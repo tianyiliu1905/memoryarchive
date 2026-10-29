@@ -7,9 +7,29 @@ import type { Project } from './types';
 export const PROJECTS: Project[] = [
   /* ========================= GREEN — 设计作品 / 过程记录 ========================= */
   {
+    id: 'catpaw-design',
+    cluster: 'green',
+    title: 'Catpaw 设计',
+    year: '',
+    role: '设计',
+    summary: '项目内容待补充。',
+    archiveId: 'CATPAW',
+    offset: [0.26, -0.14, -0.22],
+    scale: 1.06,
+    chapters: [
+      {
+        kind: 'cover',
+        marker: '00 / COVER',
+        heading: 'Catpaw\n设计',
+        body: ['项目内容待补充。'],
+      },
+      { kind: 'next', marker: '01 / RETURN', heading: '返回作品集' },
+    ],
+  },
+  {
     id: 'nocode-talk-to-task',
     cluster: 'green',
-    title: 'Nocode 产品重构',
+    title: 'Nocode Task 产品重构',
     year: '2025 – 2026',
     role: '产品 / 设计',
     summary: '把一个「一句话生成网页」的玩具，改造成能装下真实项目的工具。',
@@ -20,7 +40,7 @@ export const PROJECTS: Project[] = [
       {
         kind: 'cover',
         marker: '00 / COVER',
-        heading: 'Nocode\n产品重构',
+        heading: 'Nocode Task\n产品重构',
         body: [
           'Nocode 最初只回答一个问题：能不能一句话生成一个网页。后来它必须回答另一个问题——能不能装下一个真正的项目、一整个团队、和已经写了很多年的代码。',
         ],
@@ -452,237 +472,6 @@ export const PROJECTS: Project[] = [
     ],
   },
 
-  {
-    id: 'tidal-reader',
-    cluster: 'green',
-    title: 'Tidal Reader',
-    year: '2024',
-    role: '概念、交互设计、前端实现',
-    summary: '一个跟随阅读节奏起伏的长文阅读器。',
-    archiveId: 'MEM-014',
-    offset: [-0.34, 0.12, 0.2],
-    scale: 1.24,
-    chapters: [
-      {
-        kind: 'cover',
-        marker: '00 / COVER',
-        heading: 'Tidal\nReader',
-        body: ['一个会呼吸的阅读器。文字的密度决定光的涨落，阅读速度决定潮汐的周期。'],
-        meta: [
-          { label: 'Year', value: '2024' },
-          { label: 'Role', value: 'Concept · Interaction · Frontend' },
-          { label: 'Stack', value: 'React · WebGL · Rust/WASM' },
-          { label: 'Archive', value: 'MEM-014' },
-        ],
-      },
-      {
-        kind: 'origin',
-        marker: '01 / ORIGIN',
-        heading: '为什么屏幕上的长文让人疲惫',
-        body: [
-          '我花了三个月记录自己在屏幕上放弃一篇长文的时刻。结论出乎意料：放弃几乎从不发生在「内容变难」的地方，而发生在「视觉节奏突然变平」的地方。',
-          '纸质书有天然的节奏——翻页、厚度、指尖的位置感。屏幕把这些全部抹平成一条无限滚动的灰带。我们失去的不是专注力，是地形。',
-        ],
-        annotation: '第 47 次放弃，发生在第 9 屏，那一页没有任何段落分隔。',
-        plates: [
-          { index: 'PL.01', caption: '放弃时刻的热力分布，三个月，212 次记录', seed: 1401, variant: 'scatter', ratio: 1.42 },
-        ],
-      },
-      {
-        kind: 'process',
-        marker: '02 / PROCESS',
-        heading: '把文本变成地形',
-        body: [
-          '我写了一个解析器，把每个段落的句长方差、标点密度、生僻词比例映射成一条「阅读海拔线」。然后让背景的光随着这条线极缓慢地涨落。',
-          '关键是慢。第一版的光变化周期是 2 秒，所有测试者都说晕。最终版本是 40 秒——慢到你不会注意，但停下来时会发现光已经完全不同了。',
-        ],
-        annotation: '慢到不被察觉，才是环境。',
-        plates: [
-          { index: 'PL.02', caption: '阅读海拔线的推导，v3 → v11', seed: 1402, variant: 'wave', ratio: 1.78 },
-          { index: 'PL.03', caption: '光照周期测试矩阵', seed: 1403, variant: 'grid', ratio: 1.0 },
-        ],
-      },
-      {
-        kind: 'result',
-        marker: '03 / RESULT',
-        heading: '完读率提升 34%',
-        body: ['在 1,800 名读者的 A/B 测试中，超过 3000 字的长文完读率从 41% 提升到 55%。'],
-        points: [
-          '平均阅读时长 +2.4 分钟',
-          '主动收藏率 +18%',
-          '「感觉不累」在开放反馈中出现 67 次',
-          '被 3 家独立媒体采用为默认阅读模式',
-        ],
-        plates: [
-          { index: 'PL.04', caption: '最终阅读界面，潮汐处于高位', seed: 1404, variant: 'field', ratio: 1.6 },
-        ],
-      },
-      {
-        kind: 'reflection',
-        marker: '04 / REFLECTION',
-        heading: '回望',
-        body: [
-          '这个项目教会我一件事：最好的交互设计经常是「不被看见」的。如果有人称赞动效好看，说明它还不够好。',
-          '我至今仍在用它读书。但我几乎从不注意到光在变——这大概是它最成功的地方。',
-        ],
-        annotation: '成功的环境设计是隐形的。',
-      },
-      {
-        kind: 'next',
-        marker: '05 / RETURN',
-        heading: '这段记忆到此为止',
-      },
-    ],
-  },
-
-  {
-    id: 'soft-latency',
-    cluster: 'green',
-    title: 'Soft Latency',
-    year: '2023',
-    role: '交互研究、原型',
-    summary: '研究「等待」如何被设计成一种情绪，而非缺陷。',
-    archiveId: 'MEM-009',
-    offset: [0.3, -0.22, -0.16],
-    scale: 1.06,
-    chapters: [
-      {
-        kind: 'cover',
-        marker: '00 / COVER',
-        heading: 'Soft\nLatency',
-        body: ['所有人都在消灭加载时间。我想知道，如果把它留下来会怎样。'],
-        meta: [
-          { label: 'Year', value: '2023' },
-          { label: 'Role', value: 'Research · Prototype' },
-          { label: 'Format', value: '12 prototypes · 1 essay' },
-          { label: 'Archive', value: 'MEM-009' },
-        ],
-      },
-      {
-        kind: 'origin',
-        marker: '01 / ORIGIN',
-        heading: '瞬间完成的东西没有重量',
-        body: [
-          '在一个把响应时间压到 80ms 的项目里，用户反馈出现了奇怪的词：「不真实」「像假的」「不确定有没有成功」。',
-          '我们花了两年削减延迟，然后发现人类需要延迟来确认因果。太快的反馈会切断动作与结果之间的心理连接。',
-        ],
-        annotation: '80ms 太快了，快到不像真的。',
-        plates: [
-          { index: 'PL.01', caption: '延迟感知实验：0 – 1200ms 的 14 档', seed: 902, variant: 'strata', ratio: 1.5 },
-        ],
-      },
-      {
-        kind: 'process',
-        marker: '02 / PROCESS',
-        heading: '十二个原型',
-        body: [
-          '我做了 12 个原型，每个探索一种「有质感的等待」：墨水扩散、纸张吸水、显影液、齿轮咬合、潮汐、呼吸。',
-          '最有效的不是最漂亮的，而是那些暗示了「某种物理过程正在发生」的——哪怕这个过程完全是虚构的。',
-        ],
-        plates: [
-          { index: 'PL.02', caption: '12 个等待原型的形态索引', seed: 903, variant: 'grid', ratio: 1.1 },
-          { index: 'PL.03', caption: '墨水扩散模型，帧序列', seed: 904, variant: 'field', ratio: 1.9 },
-        ],
-      },
-      {
-        kind: 'result',
-        marker: '03 / RESULT',
-        heading: '一份延迟设计指南',
-        body: ['最终产出是一份内部指南，定义了四种延迟语义及其适用场景。'],
-        points: [
-          '确认型延迟：120 – 240ms，用于不可逆操作',
-          '过程型延迟：600ms+，暗示真实计算',
-          '呼吸型延迟：用于连续操作之间的节奏',
-          '不应设计的延迟：导航、输入回显',
-        ],
-      },
-      {
-        kind: 'reflection',
-        marker: '04 / REFLECTION',
-        heading: '回望',
-        body: [
-          '这是我第一次意识到，性能优化和体验设计之间存在一个非线性的拐点。更快不总是更好。',
-          '后来我把这个结论用在了几乎每一个项目里，包括这个作品集本身——你现在看到的每个转场，都刻意比技术上限慢。',
-        ],
-        annotation: '你此刻的等待，也是被设计过的。',
-      },
-      { kind: 'next', marker: '05 / RETURN', heading: '这段记忆到此为止' },
-    ],
-  },
-
-  {
-    id: 'ghost-cursor',
-    cluster: 'green',
-    title: 'Ghost Cursor',
-    year: '2022',
-    role: '实验、开源',
-    summary: '一个记住你所有犹豫的光标。',
-    archiveId: 'MEM-006',
-    offset: [0.06, 0.32, -0.3],
-    scale: 0.92,
-    chapters: [
-      {
-        kind: 'cover',
-        marker: '00 / COVER',
-        heading: 'Ghost\nCursor',
-        body: ['它不记录你点了什么，只记录你差点点了什么。'],
-        meta: [
-          { label: 'Year', value: '2022' },
-          { label: 'Role', value: 'Experiment · Open Source' },
-          { label: 'Stars', value: '2.1k' },
-          { label: 'Archive', value: 'MEM-006' },
-        ],
-      },
-      {
-        kind: 'origin',
-        marker: '01 / ORIGIN',
-        heading: '犹豫是最诚实的数据',
-        body: [
-          '点击是结论，移动是思考过程。我们一直在分析结论，却扔掉了思考。',
-          '一个在「删除账户」按钮上悬停了 4 秒又移开的用户，比一个直接点击的用户告诉我们更多。',
-        ],
-        annotation: '4 秒的悬停 = 一次未发生的流失。',
-        plates: [{ index: 'PL.01', caption: '单个会话的光标轨迹，8 分钟', seed: 601, variant: 'orbit', ratio: 1.34 }],
-      },
-      {
-        kind: 'process',
-        marker: '02 / PROCESS',
-        heading: '把轨迹变成幽灵',
-        body: [
-          '我写了一个轻量库，把光标轨迹渲染成逐渐消散的拖影，并标记出所有停顿超过 800ms 的「犹豫点」。',
-          '把 500 个会话叠加在一起时，页面上浮现出了一张看不见的地图：所有人都在同样的地方迟疑。',
-        ],
-        plates: [
-          { index: 'PL.02', caption: '500 个会话的犹豫点叠加', seed: 602, variant: 'scatter', ratio: 1.62 },
-          { index: 'PL.03', caption: '拖影衰减函数对比', seed: 603, variant: 'wave', ratio: 1.2 },
-        ],
-      },
-      {
-        kind: 'result',
-        marker: '03 / RESULT',
-        heading: '开源后的意外',
-        body: ['它被用在了我完全没预料到的地方。'],
-        points: [
-          'GitHub 2.1k stars',
-          '被用于无障碍研究，识别运动障碍用户的操作困难',
-          '一位老师用它分析学生做题时的思维停顿',
-          '一个艺术家用它生成了一整个系列的版画',
-        ],
-      },
-      {
-        kind: 'reflection',
-        marker: '04 / REFLECTION',
-        heading: '回望',
-        body: [
-          '我做它的时候想的是转化率优化，结果它最有价值的用途全都在别处。',
-          '开源的意义大概就在这里：你只负责造工具，别人负责想象它。',
-        ],
-      },
-      { kind: 'next', marker: '05 / RETURN', heading: '这段记忆到此为止' },
-    ],
-  },
-
-  /* ========================= PURPLE — 图书馆 / 工具与资料 ========================= */
   {
     id: 'lib-cn-type-pairing',
     cluster: 'purple',
@@ -1512,81 +1301,7 @@ export const PROJECTS: Project[] = [
     ],
   },
 
-  {
-    id: 'margin-notes',
-    cluster: 'green',
-    title: 'Margin Notes',
-    year: '2023',
-    role: '产品设计、前端实现',
-    summary: '一个只能在页边写字的笔记工具，限制反而带来了更好的思考。',
-    archiveId: 'MEM-011',
-    offset: [0.26, -0.14, -0.22],
-    scale: 1.06,
-    chapters: [
-      {
-        kind: 'cover',
-        marker: '00 / COVER',
-        heading: 'Margin\nNotes',
-        body: ['最窄的地方，往往写下最重要的话。'],
-        meta: [
-          { label: 'Year', value: '2023' },
-          { label: 'Role', value: 'Product · Frontend' },
-          { label: 'Stack', value: 'TypeScript · CRDT · IndexedDB' },
-          { label: 'Archive', value: 'MEM-011' },
-        ],
-      },
-      {
-        kind: 'origin',
-        marker: '01 / ORIGIN',
-        heading: '空白页的暴政',
-        body: [
-          '我有七个笔记应用，每个都有一片无限大的空白页。七个都是空的。',
-          '但我书架上那些二手书的页边，密密麻麻全是前一位读者的字。同样是写字，为什么一个写满了，一个写不出来？',
-        ],
-        annotation: '无限的自由，等于无处下笔。',
-      },
-      {
-        kind: 'process',
-        marker: '02 / PROCESS',
-        heading: '把空间收窄到 180px',
-        body: [
-          '我做了一个只有页边可写的阅读器。正文区域完全只读，笔记只能写在右侧 180px 宽的窄栏里，单条上限 280 字。',
-          '测试时我以为大家会抱怨太窄。结果相反——写作频率比无限画布版本高了 3 倍多。约束消除了「要写得完整」的压力。',
-        ],
-        annotation: '280 字不是限制，是许可：你不必写完。',
-        plates: [
-          { index: 'PL.02', caption: '栏宽 A/B 测试：120 / 180 / 240 / ∞', seed: 1102, variant: 'grid', ratio: 1.3 },
-          { index: 'PL.03', caption: '书写频率与栏宽的关系', seed: 1103, variant: 'wave', ratio: 1.7 },
-        ],
-      },
-      {
-        kind: 'result',
-        marker: '03 / RESULT',
-        heading: '人们终于开始写了',
-        body: ['上线一年，用户的人均笔记条数是他们此前在通用笔记工具中的 3.4 倍。'],
-        points: [
-          '人均每本书 24 条页边笔记',
-          '留存率 61%（行业同类约 20%）',
-          '完全本地优先，无账号即可使用',
-          '笔记导出为纯 Markdown',
-        ],
-        plates: [
-          { index: 'PL.04', caption: '页边笔记的最终形态', seed: 1104, variant: 'field', ratio: 1.58 },
-        ],
-      },
-      {
-        kind: 'reflection',
-        marker: '04 / REFLECTION',
-        heading: '回望',
-        body: [
-          '这个项目让我对「强大」这个词警惕起来。我们总以为给用户更多能力就是更好，但大多数时候，人们卡住不是因为工具不够强，而是因为选择太多。',
-          '设计的一部分工作，是替人把不必要的可能性关掉。',
-        ],
-        annotation: '好的约束不是墙，是扶手。',
-      },
-      { kind: 'next', marker: '05 / RETURN', heading: '这段记忆到此为止' },
-    ],
-  },
+
 ];
 
 export const PROJECTS_BY_CLUSTER = {

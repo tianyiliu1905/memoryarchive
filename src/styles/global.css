@@ -7,9 +7,9 @@
   /* ---- paper ----
      中性偏冷的白。三档之间只差明度，色相保持一致，
      避免叠加时（如图版压在纸上）露出黄绿色的边。 */
-  --paper: #f6f6f6;
-  --paper-warm: #f0f0f1;
-  --paper-deep: #e7e7e9;
+  --paper: #ffffff;
+  --paper-warm: #fcfcfd;
+  --paper-deep: #f7f7f9;
 
   /* ---- ink ---- */
   --ink: #16151a;
@@ -114,7 +114,7 @@ button {
   inset: -4%;
   pointer-events: none;
   z-index: 900;
-  opacity: 0.42;
+  opacity: 0.06;
   mix-blend-mode: multiply;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
   background-size: 220px 220px;
