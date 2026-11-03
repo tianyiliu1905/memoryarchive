@@ -1181,3 +1181,21 @@ html[data-reduced-motion='true'] .chapter__code {
 html[data-reduced-motion='true'] .chapter__contrast-arrow {
   opacity: 0.55;
 }
+
+/* 案例来源与原设计稿链接，沿用正文和分类强调色。 */
+.chapter__source-links {
+  list-style: none;
+  padding: 0;
+  margin: 24px 0 0;
+  font-size: clamp(11.5px, 1.1vw, 13px);
+  line-height: 1.7;
+}
+.chapter__source-links a {
+  color: var(--accent-deep);
+  text-decoration-color: var(--ink-ghost);
+  text-underline-offset: 4px;
+}
+.chapter__source-links a:focus-visible {
+  outline: 1px solid var(--accent-deep);
+  outline-offset: 5px;
+}

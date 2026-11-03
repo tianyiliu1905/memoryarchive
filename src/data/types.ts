@@ -230,6 +230,8 @@ export interface Chapter {
   code?: { lang: string; lines: string[] };
   /** uimock：界面复刻。给两个则左右对照（改版前 / 后） */
   mocks?: UiMock[];
+  /** 叙事材料与原设计稿位置；用于图文章节。 */
+  links?: { label: string; url: string }[];
 }
 
 export interface Project {

@@ -102,6 +102,13 @@ export function ChapterPanel({ chapter, project, accent, index, onExit }: Props)
                 {chapter.annotation}
               </aside>
             )}
+            {chapter.links && (
+              <ul className="chapter__source-links">
+                {chapter.links.map((link) => (
+                  <li key={link.url}><a href={link.url} target="_blank" rel="noreferrer">{link.label} ↗</a></li>
+                ))}
+              </ul>
+            )}
           </div>
 
           {chapter.plates && chapter.plates.length > 0 && (
