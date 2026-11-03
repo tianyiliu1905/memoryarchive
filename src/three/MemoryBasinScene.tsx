@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { MoteConnections, type MoteMaterials } from './MoteConnections';
 import { Canvas } from '@react-three/fiber';
 import { Basin } from './Basin';
 import { BasinRing } from './BasinRing';
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export function MemoryBasinScene({ pointer, diveCharge, panAmount, dragGuard }: Props) {
+  const moteMaterials = useMemo<MoteMaterials>(() => new Map(), []);
   const anchors = useMemo(
     () => Object.fromEntries(CLUSTER_ORDER.map((id) => [id, clusterAnchor(CLUSTERS[id])])),
     []
@@ -46,9 +48,11 @@ export function MemoryBasinScene({ pointer, diveCharge, panAmount, dragGuard }: 
           pointer={pointer}
           diveCharge={diveCharge}
           anchor={anchors[id]}
+          materials={moteMaterials}
         />
       ))}
 
+      <MoteConnections materials={moteMaterials} />
       <HitZones dragGuard={dragGuard} />
     </Canvas>
   );

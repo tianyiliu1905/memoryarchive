@@ -98,7 +98,7 @@ export function BasinOverlay({ subscribe, subscribePan }: Props) {
             transition={{ duration: 1.6, ease: [0.16, 1, 0.3, 1], delay: 2.4 }}
           >
             <span className="scroll-cue__label">
-              {isTouch ? '上滑进入' : '滚动进入'}
+              滑动页面进入
             </span>
             {/* 横线 + 下垂线 + 菱形，构成一个向下的指引 */}
             <span className="scroll-cue__bar" aria-hidden="true" />

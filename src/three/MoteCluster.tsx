@@ -1,4 +1,5 @@
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
+import type { MoteMaterials } from './MoteConnections';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { createMotesMaterial } from './motesMaterial';
@@ -14,6 +15,7 @@ interface Props {
   diveCharge: React.MutableRefObject<number>;
   /** 盆平面上的世界坐标锚点 */
   anchor: THREE.Vector3;
+  materials: MoteMaterials;
 }
 
 /**
@@ -35,7 +37,7 @@ const TRAIL_NODES = 7;
  * 分布用的是「聚集式随机」而非均匀随机：先选一个吸引核，
  * 再按幂次衰减的半径散开，这样才像墨水在水中扩散。
  */
-export function MoteCluster({ cluster, projects, pointer, diveCharge, anchor }: Props) {
+export function MoteCluster({ cluster, projects, pointer, diveCharge, anchor, materials }: Props) {
   const matRef = useRef<THREE.ShaderMaterial>(null);
   const { size, viewport } = useThree();
 
@@ -138,6 +140,11 @@ export function MoteCluster({ cluster, projects, pointer, diveCharge, anchor }: 
 
     return { geometry: geo, material: mat };
   }, [cluster, projects, anchor]);
+
+  useEffect(() => {
+    materials.set(cluster.id, material);
+    return () => { if (materials.get(cluster.id) === material) materials.delete(cluster.id); };
+  }, [materials, cluster.id, material]);
 
   // ---- 每帧更新 uniforms ----
   const focusV = useRef(0);
@@ -268,7 +275,7 @@ export function MoteCluster({ cluster, projects, pointer, diveCharge, anchor }: 
   void size;
 
   return (
-    <points geometry={geometry} frustumCulled={false}>
+    <points geometry={geometry} frustumCulled={false} renderOrder={2}>
       <primitive object={material} ref={matRef} attach="material" />
     </points>
   );
