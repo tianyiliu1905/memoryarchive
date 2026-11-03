@@ -521,7 +521,13 @@ export function Plate({ plate, accent }: Props) {
   return (
     <figure className="plate" ref={wrapRef} style={{ height, aspectRatio: String(plate.ratio) }}>
       <div className="plate__frame">
-        <canvas ref={canvasRef} className={`plate__canvas ${visible ? 'is-developed' : ''}`} />
+        {plate.image ? (
+          <a className="plate__image-link" href={plate.image.src} target="_blank" rel="noreferrer" aria-label="查看完整截图（新标签页）">
+            <img className="plate__image" src={plate.image.src} alt={plate.image.alt} loading="lazy" />
+          </a>
+        ) : (
+          <canvas ref={canvasRef} className={`plate__canvas ${visible ? 'is-developed' : ''}`} />
+        )}
         <span className="plate__index archive-tag">{plate.index}</span>
       </div>
       <figcaption className="plate__caption">{plate.caption}</figcaption>

@@ -56,3 +56,21 @@
     font-size: 9.5px;
   }
 }
+
+/* 真实项目截图沿用图版容器与图注，保留完整画面。 */
+.plate__image-link {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: zoom-in;
+}
+.plate__image-link:focus-visible {
+  outline: 2px solid var(--accent-deep);
+  outline-offset: -2px;
+}
+.plate__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}

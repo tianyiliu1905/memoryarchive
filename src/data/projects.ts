@@ -1,8 +1,9 @@
+import { B2B_GENERATION } from './b2bGeneration';
 import type { Project } from './types';
 
 /**
- * 九段记忆。
- * 每段由 6 个横向章节组成：封面 → 起因 → 过程 → 结果 → 回望 → 下一段记忆。
+ * 作品与资料。
+ * 每段由横向章节组成。
  */
 export const PROJECTS: Project[] = [
   /* ========================= GREEN — 设计作品 / 过程记录 ========================= */
@@ -604,7 +605,7 @@ export const PROJECTS: Project[] = [
     title: 'CSS 动画曲线调整器',
     year: '2026',
     role: '自建工具',
-    summary: '十个真实场景里调曲线，调好直接抄走。',
+    summary: '保留曲线预设，也记录 CatPaw 原型里的分栏、推荐切换与任务状态。',
     archiveId: 'LIB-007',
     offset: [0.28, -0.2, -0.14],
     scale: 1.08,
@@ -616,7 +617,8 @@ export const PROJECTS: Project[] = [
         heading: 'CSS 动画曲线调整器',
         body: [
           '曲线编辑器到处都有，但它们大多只让你看一个方块在空地上移动。方块好看，放进真实界面里经常不对。',
-          '所以这个工具反过来做：先摆好十个真实场景——按钮填充、弹窗消散、底部面板、AI 打字，然后在场景里调曲线，当场看效果，调好复制走。',
+          '工具把按钮填充、弹窗消散、底部面板、AI 打字等场景放进来，让曲线能对着具体动作调整。这里保留原有预设与用法，再接上 CatPaw 中用过的参数和交互规则。',
+          'CatPaw 部分核对自当前本地交互原型及设计记录，包含尚未提交的实现；不代表生产上线或用户测试结论。本页展示资料与代码，未嵌入可操作编辑器。',
         ],
         meta: [
           { label: '形态', value: '单个 HTML 文件，本地打开即用' },
@@ -647,7 +649,7 @@ export const PROJECTS: Project[] = [
       {
         kind: 'table',
         marker: 'LIB-007 / 03',
-        heading: '十个场景与默认时长',
+        heading: '原工具的场景与默认时长',
         table: {
           head: ['场景', '调什么', '默认时长'],
           rows: [
@@ -667,14 +669,14 @@ export const PROJECTS: Project[] = [
       {
         kind: 'specs',
         marker: 'LIB-007 / 04',
-        heading: '几条自己攒下来的经验',
+        heading: '调曲线时的几个起点',
         points: [
           '入场用 ease-out｜元素落到位要有减速，冲进来再停住才像有重量。',
           '离场用 ease-in｜走的时候加速，干脆，不拖泥带水。',
-          '过冲要克制｜弹跳和回弹只给点赞、收藏这类即时反馈，界面转场用了会晕。',
+          '过冲要克制｜弹跳与回弹可先用于点赞、收藏等短反馈；大范围转场需单独核对舒适度。',
           '拆开调｜透明度和位移分别给曲线，一起调很难同时对。',
           '时长和距离挂钩｜移动得越远，时间要越长，不然像被弹开。',
-          '同类动作统一｜同一个产品里，所有弹窗共用一条，不要每处各调各的。',
+          '同类动作统一｜为相近任务保留共同节奏，再按移动距离、内容量和交互状态调整。',
         ],
         plates: [
           { index: 'PL.01', caption: '十个场景的曲线取值分布', seed: 4002, variant: 'wave', ratio: 1.55 },
@@ -703,605 +705,342 @@ export const PROJECTS: Project[] = [
         },
         annotation: '收成变量之后，改一处全站跟着变——这比每次重调都快。',
       },
+      {
+        "kind": "specs",
+        "marker": "LIB-007 / 06",
+        "heading": "分栏：拖的时候跟手，松开再收合",
+        "points": [
+          "用户正在拉边界｜按住时关闭网格过渡，让宽度直接跟随指针；松手触发状态变化后恢复 380ms 的自动过渡。",
+          "先停在断点｜记录要求两次独立拖拽：第一次停住，第二次越过 32px 才允许折叠或文件全屏。曲线配合明确的触发条件使用。",
+          "收合时保护文字｜收起区内容立即隐藏，只让外层列宽变化；文件全屏时主区也立即隐藏，避免持续展示文字被挤窄。",
+          "记录与现状要对照｜文档写左列归零；当前源码中，手动收合保留窄轨，窗口自适应收合才归零。复用时保留这一状态区别。",
+          "来源与判断｜PANEL_INTERACTION_ANIMATIONS.md、styles.css。380ms 与曲线是实现事实；将它概括为「跟手与自动过渡分开」沿用记录中的原则，未验证最优参数。"
+        ]
+      },
+      {
+        "kind": "snippet",
+        "marker": "LIB-007 / 07",
+        "heading": "把跟手和自动过渡分开写",
+        "body": [
+          "从 CatPaw 规则提炼的 CSS 简化示例。两层网格共用节奏；列宽目标仍由各自状态设置。拖拽的宽度计算与释放判定需要 JS 配合。"
+        ],
+        "code": {
+          "lang": "CSS · 提炼示例",
+          "lines": [
+            ".window, .content {",
+            "  transition: grid-template-columns",
+            "    380ms cubic-bezier(.22,.68,0,1);",
+            "}",
+            ".window.is-resizing,",
+            ".content.is-resizing { transition: none; }",
+            "@media (prefers-reduced-motion: reduce) {",
+            "  .window, .content { transition: none; }",
+            "}"
+          ]
+        }
+      },
+      {
+        "kind": "specs",
+        "marker": "LIB-007 / 08",
+        "heading": "推荐切换：让新布局接住旧位置",
+        "points": [
+          "内容变了，输入区还在｜animateHeroReflow 在更新前后测量 hero 及子元素位置，用 transform 补回偏移，再以 360ms、cubic-bezier(.22,.68,0,1) 回到新布局。",
+          "节奏分给不同层｜二级推荐等待 200ms 后替换；每项以 320ms 入场，从下方 8px 淡入，相邻项错开 55ms。案例区另用 180ms 的淡出与替换。",
+          "再点一次时接新意图｜切换前清除旧推荐与案例定时器，取消旧 hero 及子元素动画；从当前可见位置重新测量，不让旧回调继续切内容。",
+          "范围与成本｜这是 JS 驱动布局测量、Web Animations API 执行动画的组合，不能只复制一条 CSS。减少动态效果时跳过 reflow 动画与等待。",
+          "来源与取舍｜app.js 的 animateHeroReflow、setPromptCategory、transitionCases；styles.css 的 secondaryPromptIn。DECISIONS.md 保留轻量切换原则；没有记录曲线对比实验。"
+        ]
+      },
+      {
+        "kind": "table",
+        "marker": "LIB-007 / 09",
+        "heading": "任务状态：运行、暂停、完成各有节奏",
+        "table": {
+          "head": [
+            "当前原型场景",
+            "参数 / 动作",
+            "状态边界"
+          ],
+          "rows": [
+            [
+              "队列新增一项",
+              "250ms ease-out；Y 7px → 0，opacity 0 → 1",
+              "入场一次；无延迟"
+            ],
+            [
+              "任务运行标签",
+              "2s ease-in-out infinite；背景扫光",
+              "暂停或完成时停止扫光"
+            ],
+            [
+              "暂停的回复正文",
+              "5s ease-in-out infinite；文字颜色呼吸",
+              "正文保留；减少动态效果时停用"
+            ],
+            [
+              "继续执行",
+              "旧回复转历史，新开一轮",
+              "旧轮停止呼吸；新轮按自己的状态显示"
+            ]
+          ],
+          "note": "来源：conversation-queue-demo.css / .js，已由 index.html 引用。这里记录模拟任务状态的反馈，不把循环动画当作真实进度，也不把继续执行写成后端任务恢复。"
+        }
+      },
+      {
+        "kind": "snippet",
+        "marker": "LIB-007 / 10",
+        "heading": "用状态结束动画，不只负责播放",
+        "body": [
+          "从任务队列样式提炼的简例：完成和暂停都收起运行扫光；暂停正文保留较慢的颜色反馈。下面省略渐变底图与扫光关键帧，保留状态规则和暂停呼吸。"
+        ],
+        "code": {
+          "lang": "CSS · 提炼示例",
+          "lines": [
+            ".running-label { animation: sweep 2s ease-in-out infinite; }",
+            ".is-paused .running-label,",
+            ".is-complete .running-label { animation: none; }",
+            ".is-paused .reply {",
+            "  animation: breath 5s ease-in-out infinite;",
+            "}",
+            "@keyframes breath {",
+            "  0%,100% { color: var(--text-4); }",
+            "  50% { color: var(--ds-text-1); }",
+            "}"
+          ]
+        }
+      },
+      {
+        "kind": "specs",
+        "marker": "LIB-007 / 11",
+        "heading": "复用之前，把收尾与限制一起带走",
+        "points": [
+          "结束事件要筛选｜面板切换只接收 content 自身的 grid-template-columns transitionend；另设 500ms 清理兜底，无动画时也能移除临时状态。",
+          "用户滚动时交还控制｜打开产物预览时逐帧锚定卡片位置，网格过渡结束或 500ms 后停止；wheel、touchstart 会提前停止，下次打开先取消旧锚定。",
+          "暂停时旧回调失效｜队列 stop 清理计时器并递增 generation；回调检查轮次和暂停状态，防止旧轮继续更新。来源：app.js、conversation-queue-demo.js。",
+          "减少动态效果｜原型关闭布局过渡、推荐入场、扫光及暂停呼吸，保留静态状态与正文。复用上一页简例时，也需为这些自定义类补相同媒体查询。",
+          "性能仍需按页面核对｜布局列宽会触发布局；位置补偿使用 transform，但前后测量仍有开销；文字颜色与背景扫光涉及绘制。没有帧率测量，不写成性能优化成果。"
+        ]
+      },
       { kind: 'next', marker: 'LIB-007 / END', heading: '这份资料到此为止' },
     ],
   },
-
+  /* ========================= YELLOW — 研究 ========================= */
   {
-    id: 'salt-index',
-    cluster: 'purple',
-    title: 'The Salt Index',
-    year: '2024',
-    role: '摄影、编辑、书籍设计',
-    summary: '在四片盐湖上拍摄的、关于消失的摄影书。',
-    archiveId: 'MEM-016',
-    offset: [0.28, 0.18, 0.24],
-    scale: 1.3,
-    chapters: [
-      {
-        kind: 'cover',
-        marker: '00 / COVER',
-        heading: 'The Salt\nIndex',
-        body: ['四片正在消失的盐湖，三年，1,140 张底片，最终留下 58 张。'],
-        meta: [
-          { label: 'Year', value: '2022 – 2024' },
-          { label: 'Role', value: 'Photography · Editing · Book Design' },
-          { label: 'Format', value: '224pp · 58 plates' },
-          { label: 'Archive', value: 'MEM-016' },
-        ],
-      },
-      {
-        kind: 'origin',
-        marker: '01 / ORIGIN',
-        heading: '水退去之后留下的是索引',
-        body: [
-          '盐湖干涸时不会一次消失。它退去，留下一圈盐痕；再退，再留一圈。每一圈都是一个年份的索引。',
-          '我意识到我拍的不是风景，是一份地质学意义上的档案目录——大地自己记录的时间表。',
-        ],
-        annotation: '每一道盐痕都是一次退场的签名。',
-        plates: [{ index: 'PL.01', caption: '第一次勘景，盐痕的同心结构', seed: 1601, variant: 'strata', ratio: 1.5 }],
-      },
-      {
-        kind: 'process',
-        marker: '02 / PROCESS',
-        heading: '三年，四次返回',
-        body: [
-          '我在同样的四个坐标点，每年同一周返回一次，用同一台 4×5 相机、同样的焦距重拍。',
-          '编辑阶段比拍摄更痛苦。1,140 张里要选 58 张，标准不是「好看」，而是「这张是否让相邻两张之间产生时间」。',
-        ],
-        annotation: '选片的标准不是单张，是间隙。',
-        plates: [
-          { index: 'PL.02', caption: '同一坐标，2022 / 2023 / 2024', seed: 1602, variant: 'field', ratio: 2.1 },
-          { index: 'PL.03', caption: '编辑台，第 6 轮排序', seed: 1603, variant: 'grid', ratio: 1.28 },
-        ],
-      },
-      {
-        kind: 'result',
-        marker: '03 / RESULT',
-        heading: '一本会变色的书',
-        body: ['书用了一种遇湿会留下永久痕迹的特种纸。读者的手指会在书上留下自己的索引。'],
-        points: [
-          '首印 800 册，三个月售罄',
-          '入围 2024 年度摄影书奖',
-          '两家美术馆收藏',
-          '每一本在读完后都不一样',
-        ],
-        plates: [{ index: 'PL.04', caption: '成书，第 112 页展开', seed: 1604, variant: 'field', ratio: 1.7 }],
-      },
-      {
-        kind: 'reflection',
-        marker: '04 / REFLECTION',
-        heading: '回望',
-        body: [
-          '做这本书的三年里，其中一片湖彻底消失了。最后一次去的时候，我没有按快门。',
-          '有些东西记录下来是为了留住，有些是为了确认它真的走了。',
-        ],
-        annotation: '最后一次，我没有拍。',
-      },
-      { kind: 'next', marker: '05 / RETURN', heading: '这段记忆到此为止' },
+    "id": "aesthetic-scoring-standards",
+    "cluster": "yellow",
+    "title": "审美评分标准",
+    "year": "",
+    "role": "",
+    "summary": "把生成页面的审美判断拆成可核对的问题，用人评、页面证据和对照样本校准边界。",
+    "archiveId": "INQ-001",
+    "offset": [
+      -0.22,
+      0.08,
+      0.3
     ],
+    "scale": 1.08,
+    "chapters": [
+      {
+        "kind": "cover",
+        "marker": "00 / COVER",
+        "heading": "审美评分标准",
+        "body": [
+          "为 NoCode 建立可复核的视觉评估方法：把审美判断拆成具体问题，再用人评、页面证据和对照样本持续校准。"
+        ],
+        "meta": [
+          {
+            "label": "Scope",
+            "value": "生成页面 · 视觉评估研究"
+          },
+          {
+            "label": "Status",
+            "value": "方法与过程已整理 · 结果呈现待补充"
+          }
+        ]
+      },
+      {
+        "kind": "origin",
+        "marker": "01 / CONTEXT",
+        "heading": "生成出来之后，怎样判断它好不好",
+        "body": [
+          "NoCode 的使用场景从简单 Demo 走向专业任务。背景材料记录了一类反馈：生成结果有明显的 AI 风格，未必符合品牌和设计期待；用户觉得不好看，却很难说清从哪里改。",
+          "评估需要兼顾专业场景的规范与一致性，以及开放场景的多样性。把问题说具体，才能比较结果、讨论修改，也能为案例筛选提供依据。",
+          "更早的 D2C 还原度评估关注设计稿与生成结果的对应关系。这里记录后续 UI 审美阶段，两者分别保留各自的评估对象与证据。"
+        ],
+        "annotation": "依据：NoCode页面生成审美质感提升 · 背景与目标；D2C 仅作前史说明。"
+      },
+      {
+        "kind": "steps",
+        "marker": "02 / FRAMEWORK",
+        "heading": "把判断落到具体的问题上",
+        "body": [
+          "现存 V3 记录将判断拆为 ABCD 扣分与 E 创新加分，共 32 项。每项回答是或否，并保留理由；同一题的判断与总分计算分开处理。"
+        ],
+        "steps": [
+          {
+            "no": "01",
+            "title": "先看底线",
+            "detail": "关键内容能否完整阅读、文字是否清楚、布局是否适配当前视口。这些问题先限定评估对象。"
+          },
+          {
+            "no": "02",
+            "title": "再看视觉关系",
+            "detail": "色彩、层级与布局、装饰与图标分别检查。颜色承担什么语义、留白位于哪里，都要落到页面中的具体位置。"
+          },
+          {
+            "no": "03",
+            "title": "给设计亮点留位置",
+            "detail": "独特视觉语言、交互、排版、定制资产与记忆点另列加分，避免只用“不出错”描述设计质量。"
+          }
+        ],
+        "annotation": "逐项判断仍需读规则和取证；目前没有评审耗时数据，不将二元判断写成已验证的效率提升。"
+      },
+      {
+        "kind": "table",
+        "marker": "03 / DISAGREEMENT",
+        "heading": "同一个页面，分歧发生在哪里",
+        "table": {
+          "head": [
+            "Case 23 · 历史题意",
+            "三位人评",
+            "Sol 判断"
+          ],
+          "rows": [
+            [
+              "关键内容是否遮挡或截断",
+              "2 位判有问题，1 位判无",
+              "未判问题；理由援引图表边界与溢出检查"
+            ],
+            [
+              "模块内留白是否过大",
+              "2 位判有问题，1 位判无",
+              "未判问题；理由援引图形与容器占用"
+            ],
+            [
+              "图标是否表意有误或未显示",
+              "2 位判有问题，1 位判无",
+              "未判问题；理由认为图标语义匹配"
+            ]
+          ],
+          "note": "来源：Nocode视觉评测指标建设的 Case 23 逐题表（历史 A2 / C4 / D4，题号不套用到当前版本）。多数票用于定位分歧，具体判断仍需回到页面证据复核。"
+        }
+      },
+      {
+        "kind": "contrast",
+        "marker": "04 / BOUNDARIES",
+        "heading": "颜色多，哪些该算进问题里",
+        "contrast": [
+          {
+            "tag": "早期规则记录",
+            "heading": "先按可见色相计数",
+            "lines": [
+              "B1 以五种为阈值，标签、图标和图表色都计入。",
+              "同一色相的明暗变化只算一种；有数据或状态语义也不自动豁免。",
+              "这样的口径需要继续说明：业务表达与主视觉竞争怎样区分。"
+            ]
+          },
+          {
+            "tag": "8 月 27 日标记版补充",
+            "heading": "把语义、面积和频率带入判断",
+            "lines": [
+              "必要的数据系列、图例、状态色与游戏对象色，在未高频、大面积主导页面时可豁免。",
+              "与场景、品牌或游戏世界观相关且自洽的色彩，不因饱和而自动扣分。",
+              "这是该版对照页中的规则变化；当前运行题意已有调整，不能沿用题号直接比较。"
+            ]
+          }
+        ]
+      },
+      {
+        "kind": "process",
+        "marker": "05 / CALIBRATION",
+        "heading": "把拿不准的边界做成样本",
+        "body": [
+          "渐变和阴影很难只靠一句“太重了”形成共同判断。color_lab 将它们做成并排的微缩页面：尽量保留配方，只改变面积、位置或重复次数；阴影另做透明度、几何、层数和底色对照。",
+          "实验页设置隐藏参数的盲标和同参数重复样本，用来检查判断是否稳定。固定样本的数值不直接推广为所有页面的阈值。",
+          "现有材料包括实验页面、部分人工基准与重跑记录；全部样本是否完成标注、结论是否稳定，仍需对齐对应轮次。"
+        ],
+        "annotation": "依据：color_lab.html、color_pair_lab.html 与 visual_eval/README.md；样本是控制变量示意，不是线上页面原样。"
+      },
+      {
+        "kind": "steps",
+        "marker": "06 / METHOD",
+        "heading": "页面证据、判断和计分各自留痕",
+        "body": [
+          "独立评测实现把浏览器取证、逐题判断和本地计分串在一起，既支持全套题，也支持只重跑某一类问题。"
+        ],
+        "steps": [
+          {
+            "no": "01",
+            "title": "先看实际渲染",
+            "detail": "先取整体截图，必要时补局部观察；DOM 与 CSS 用来核对尺寸、样式和具体元素。截图印象与代码清点互相校验。"
+          },
+          {
+            "no": "02",
+            "title": "每题保存理由与位置",
+            "detail": "模型输出是或否、理由与证据选择器。渐变题区分背景、元素填充与文字，避免把不同载体的问题混在一起。"
+          },
+          {
+            "no": "03",
+            "title": "规则确定性计分",
+            "detail": "程序按该版权重计算总分。只跑子集时保留逐题结论，总分和等级为空；改口径后的重跑也需标明版本。"
+          }
+        ],
+        "annotation": "依据：visual_eval 的 README、agent.py、rubric.py、run.py 及保存的 JSON 结果。实现与试跑记录不等同于生产部署。"
+      },
+      {
+        "kind": "table",
+        "marker": "07 / VERSIONS",
+        "heading": "评分口径保留各自的版本",
+        "table": {
+          "head": [
+            "材料状态",
+            "基础维度 A / B / C / D",
+            "创新部分 E"
+          ],
+          "rows": [
+            [
+              "V3 历史记录",
+              "10 / 25 / 30 / 25",
+              "5 项，每项 2 分"
+            ],
+            [
+              "8 月 27 日标记版",
+              "5 / 30 / 30 / 20",
+              "5 项，每项 3 分"
+            ],
+            [
+              "“今日调整”草案",
+              "5 / 25 / 25 / 15",
+              "扩为 22 项，标记权重 30%"
+            ],
+            [
+              "当前运行代码",
+              "5 / 30 / 30 / 20",
+              "仍为 5 项，每项 3 分"
+            ]
+          ],
+          "note": "按材料标记区分状态，不据此认定完整的定稿时间线。22 项 Markdown 允许“?”并剔除分母，对照 HTML 改为二元；草案的计分衔接仍待核对。当前代码 B1 / B3 / C11 双权重，B2 阈值仍有待确认记录。来源：评分 XML、版本对照 HTML、加分项 Markdown、rubric.py。"
+        }
+      },
+      {
+        "kind": "reflection",
+        "marker": "08 / WORK IN PROGRESS",
+        "heading": "已有过程，结果呈现还在补充",
+        "body": [
+          "目前已留下评分规则与版本对照、人机逐题记录、可视化标注样本，以及保存证据、运行单题或全套评测的实现。这些材料能把研究过程讲清楚。",
+          "结果展示还需补上：选定同一版规则，将页面、人工基准、模型判断与复测放回同一组样本，说明哪些分歧得到处理、哪些仍存在。现有记录不足以证明生成质量或评审效率已提升。",
+          "接下来补齐版本日期、具体分工和原始图片，再整理一组可完整复核的结果。本篇先保留阶段性产物与待完善状态。"
+        ],
+        "annotation": "阶段性记录 · 结果呈现待补充。"
+      },
+      {
+        "kind": "next",
+        "marker": "09 / RETURN",
+        "heading": "研究先记录到这里，结果继续补齐"
+      }
+    ]
   },
-
-  {
-    id: 'atlas-of-almost',
-    cluster: 'purple',
-    title: 'Atlas of Almost',
-    year: '2023',
-    role: '艺术指导、装置',
-    summary: '一个只展出未完成作品的展览。',
-    archiveId: 'MEM-012',
-    offset: [-0.32, -0.24, -0.12],
-    scale: 1.1,
-    chapters: [
-      {
-        kind: 'cover',
-        marker: '00 / COVER',
-        heading: 'Atlas of\nAlmost',
-        body: ['向 40 位创作者征集他们放弃的作品。展出的全部是未完成。'],
-        meta: [
-          { label: 'Year', value: '2023' },
-          { label: 'Role', value: 'Art Direction · Installation' },
-          { label: 'Scale', value: '40 contributors · 620m²' },
-          { label: 'Archive', value: 'MEM-012' },
-        ],
-      },
-      {
-        kind: 'origin',
-        marker: '01 / ORIGIN',
-        heading: '我们只看见成品',
-        body: [
-          '每个创作者的硬盘里都有一个文件夹，装着那些走到 70% 就停下的东西。它们数量远超完成品，却从不被看见。',
-          '我想做一个展览，把这个文件夹打开。',
-        ],
-        annotation: '放弃的比完成的多十倍。',
-      },
-      {
-        kind: 'process',
-        marker: '02 / PROCESS',
-        heading: '最难的是说服',
-        body: [
-          '征集比想象中困难。展示失败需要的勇气，远大于展示成功。前两个月只有 3 人回应。',
-          '转折点是我先把自己的 11 个废弃项目公开了。之后一个月内收到了 37 份投稿。',
-        ],
-        annotation: '我得先脱掉自己的衣服。',
-        plates: [
-          { index: 'PL.02', caption: '征集回应曲线，转折点在第 9 周', seed: 1202, variant: 'wave', ratio: 1.55 },
-          { index: 'PL.03', caption: '展陈方案，未完成度作为动线', seed: 1203, variant: 'grid', ratio: 1.34 },
-        ],
-      },
-      {
-        kind: 'result',
-        marker: '03 / RESULT',
-        heading: '按「未完成度」排列的展览',
-        body: ['作品按停止时的完成百分比排列，从 5% 到 97%。越往深处，越接近完成，也越令人心碎。'],
-        points: [
-          '11,000 名观众',
-          '展厅尽头的留言墙收到 3,400 条「我也有一个」',
-          '6 位参展者在展后完成了他们的作品',
-          '巡展至 3 座城市',
-        ],
-        plates: [{ index: 'PL.04', caption: '97% 展区，最后一件', seed: 1204, variant: 'field', ratio: 1.8 }],
-      },
-      {
-        kind: 'reflection',
-        marker: '04 / REFLECTION',
-        heading: '回望',
-        body: [
-          '有 6 个人在看完展览后回去完成了自己的作品。这个数字比任何媒体报道都让我满意。',
-          '但也有人告诉我，看完之后终于能心安理得地永远放弃了。我觉得那也很好。',
-        ],
-      },
-      { kind: 'next', marker: '05 / RETURN', heading: '这段记忆到此为止' },
-    ],
-  },
-
-  {
-    id: 'quiet-type',
-    cluster: 'purple',
-    title: 'Quiet Type',
-    year: '2021',
-    role: '字体设计',
-    summary: '为临终关怀机构设计的一套字体。',
-    archiveId: 'MEM-004',
-    offset: [0.04, 0.3, -0.28],
-    scale: 0.95,
-    chapters: [
-      {
-        kind: 'cover',
-        marker: '00 / COVER',
-        heading: 'Quiet\nType',
-        body: ['一套不催促任何人的字体。'],
-        meta: [
-          { label: 'Year', value: '2021' },
-          { label: 'Role', value: 'Typeface Design' },
-          { label: 'Weights', value: '4 weights · 1,240 glyphs' },
-          { label: 'Archive', value: 'MEM-004' },
-        ],
-      },
-      {
-        kind: 'origin',
-        marker: '01 / ORIGIN',
-        heading: '医院的字体都在赶时间',
-        body: [
-          '临终关怀病房用的标识字体，和急诊室是同一套。高对比、紧字距、强调可读速度——它们在催促。',
-          '但这里没有人需要被催促。这里需要的是一种愿意等待的字形。',
-        ],
-        annotation: '急诊的字体不该出现在这里。',
-      },
-      {
-        kind: 'process',
-        marker: '02 / PROCESS',
-        heading: '把速度从字形里拿掉',
-        body: [
-          '我加宽了字距，降低了笔画对比，把所有的尖角改成极小的圆角，让终端笔画略微上扬——像一句没有说完的话。',
-          '最难的是标点。句号被我做得比常规小 18%，因为在这个语境里，结束不该被强调。',
-        ],
-        annotation: '句号小了 18%。',
-        plates: [
-          { index: 'PL.02', caption: '终端笔画的 9 次迭代', seed: 402, variant: 'grid', ratio: 1.0 },
-          { index: 'PL.03', caption: '字距测试，病房实际照明条件下', seed: 403, variant: 'strata', ratio: 1.7 },
-        ],
-      },
-      {
-        kind: 'result',
-        marker: '03 / RESULT',
-        heading: '在 14 家机构使用',
-        body: ['字体免费授权给所有非营利临终关怀机构。'],
-        points: [
-          '4 个字重，1,240 个字形',
-          '14 家机构采用',
-          '护理人员反馈：家属阅读指引时的提问减少',
-          '永久免费，非商业授权',
-        ],
-      },
-      {
-        kind: 'reflection',
-        marker: '04 / REFLECTION',
-        heading: '回望',
-        body: [
-          '一位护士长告诉我，有位家属说「这里的字看起来不那么吓人」。她不知道为什么，也没注意到字体变了。',
-          '这是我收到过最好的评价。',
-        ],
-        annotation: '她没注意到，但她感觉到了。',
-      },
-      { kind: 'next', marker: '05 / RETURN', heading: '这段记忆到此为止' },
-    ],
-  },
-
-  /* ========================= YELLOW — 研究 / 影像 / 概念 ========================= */
-  {
-    id: 'inherited-noise',
-    cluster: 'yellow',
-    title: 'Inherited Noise',
-    year: '2024',
-    role: '研究、影像',
-    summary: '关于家族录像带降质过程的一项研究。',
-    archiveId: 'MEM-015',
-    offset: [0.0, 0.24, 0.22],
-    scale: 1.18,
-    chapters: [
-      {
-        kind: 'cover',
-        marker: '00 / COVER',
-        heading: 'Inherited\nNoise',
-        body: ['我家的录像带正在以每年 2.3% 的速度失去自己。'],
-        meta: [
-          { label: 'Year', value: '2024' },
-          { label: 'Role', value: 'Research · Moving Image' },
-          { label: 'Source', value: '31 tapes · 1987 – 2004' },
-          { label: 'Archive', value: 'MEM-015' },
-        ],
-      },
-      {
-        kind: 'origin',
-        marker: '01 / ORIGIN',
-        heading: '磁带在遗忘',
-        body: [
-          '我数字化家里 31 盘旧录像带时，发现同一段婚礼录像，我十年前转录的版本和现在的版本不一样——噪点更多，颜色偏移，某些帧彻底丢失。',
-          '记忆载体本身也在遗忘。而且它遗忘的方式是有规律的。',
-        ],
-        annotation: '同一段婚礼，十年后少了 3 帧。',
-        plates: [{ index: 'PL.01', caption: '同一帧，2014 转录 vs 2024 转录', seed: 1501, variant: 'field', ratio: 1.9 }],
-      },
-      {
-        kind: 'process',
-        marker: '02 / PROCESS',
-        heading: '测量遗忘的速度',
-        body: [
-          '我建立了一个模型，对比两次转录之间的信噪比、色度偏移和丢帧位置，计算出每盘带子的年均衰减率。',
-          '有趣的是：被反复播放的带子衰减更快。我们最爱的那些记忆，损坏得最严重。',
-        ],
-        annotation: '最常看的那盘，磨损最厉害。',
-        plates: [
-          { index: 'PL.02', caption: '31 盘带子的衰减率分布', seed: 1502, variant: 'scatter', ratio: 1.45 },
-          { index: 'PL.03', caption: '播放次数 × 衰减率，强相关', seed: 1503, variant: 'wave', ratio: 1.3 },
-        ],
-      },
-      {
-        kind: 'result',
-        marker: '03 / RESULT',
-        heading: '一部 22 分钟的影片',
-        body: ['我把衰减数据反过来用，做了一部影片：画面按真实衰减率实时劣化，22 分钟里完全消失。'],
-        points: [
-          '22 分钟单频道影像',
-          '在 4 个影展放映',
-          '衰减速率完全依据真实测量数据',
-          '每次放映的拷贝都比上一次更差',
-        ],
-      },
-      {
-        kind: 'reflection',
-        marker: '04 / REFLECTION',
-        heading: '回望',
-        body: [
-          '做完这个项目后我把所有带子做了无损归档，然后再也没看过。',
-          '我意识到我保存它们不是为了看，是为了知道它们还在。',
-        ],
-      },
-      { kind: 'next', marker: '05 / RETURN', heading: '这段记忆到此为止' },
-    ],
-  },
-
-  {
-    id: 'field-notes-fog',
-    cluster: 'yellow',
-    title: 'Field Notes on Fog',
-    year: '2022',
-    role: '田野调查、写作',
-    summary: '在一座常年有雾的城市待了 60 天。',
-    archiveId: 'MEM-008',
-    offset: [-0.3, -0.2, -0.18],
-    scale: 1.02,
-    chapters: [
-      {
-        kind: 'cover',
-        marker: '00 / COVER',
-        heading: 'Field Notes\non Fog',
-        body: ['60 天，一座雾中的城市，以及人们如何在看不见时导航。'],
-        meta: [
-          { label: 'Year', value: '2022' },
-          { label: 'Role', value: 'Fieldwork · Writing' },
-          { label: 'Duration', value: '60 days' },
-          { label: 'Archive', value: 'MEM-008' },
-        ],
-      },
-      {
-        kind: 'origin',
-        marker: '01 / ORIGIN',
-        heading: '当视觉失效',
-        body: [
-          '这座城市一年有 200 天笼罩在雾里，能见度经常不足 30 米。我想知道当视觉这个主导感官被削弱时，人怎么重建空间认知。',
-          '答案是声音、气味和肌肉记忆。当地人能通过脚下路面的细微坡度变化判断自己在哪。',
-        ],
-        annotation: '他们用脚认路。',
-      },
-      {
-        kind: 'process',
-        marker: '02 / PROCESS',
-        heading: '记录看不见的地标',
-        body: [
-          '我采访了 44 位居民，请他们画出「雾天的城市地图」。没有一个人画建筑，他们画的是：面包店的气味、某段路的回声、一处永远漏水的排水管。',
-          '把 44 张图叠起来，浮现出一座完全不同的城市——由非视觉地标构成。',
-        ],
-        plates: [
-          { index: 'PL.02', caption: '44 张雾天地图的叠合', seed: 802, variant: 'orbit', ratio: 1.5 },
-          { index: 'PL.03', caption: '非视觉地标的类型分布', seed: 803, variant: 'grid', ratio: 1.15 },
-        ],
-      },
-      {
-        kind: 'result',
-        marker: '03 / RESULT',
-        heading: '一本 180 页的田野笔记',
-        body: ['成果是一本笔记，包含 44 张地图、一份非视觉地标索引，和 60 天的日记。'],
-        points: [
-          '180 页，手工装订 300 册',
-          '44 份居民绘图全文收录',
-          '被两所大学列为城市人类学参考读物',
-          '其中 7 个地标在出版时已经消失',
-        ],
-      },
-      {
-        kind: 'reflection',
-        marker: '04 / REFLECTION',
-        heading: '回望',
-        body: [
-          '第 38 天，我在雾里迷路了两个小时。那是整个项目里我唯一真正理解了它的时刻。',
-          '研究一件事和经历一件事之间，隔着一场真正的恐慌。',
-        ],
-        annotation: '第 38 天，我真的迷路了。',
-      },
-      { kind: 'next', marker: '05 / RETURN', heading: '这段记忆到此为止' },
-    ],
-  },
-
-  {
-    id: 'unit-of-attention',
-    cluster: 'yellow',
-    title: 'A Unit of Attention',
-    year: '2020',
-    role: '概念研究',
-    summary: '试图为「注意力」找到一个可测量的单位。',
-    archiveId: 'MEM-002',
-    offset: [0.3, 0.06, -0.26],
-    scale: 0.9,
-    chapters: [
-      {
-        kind: 'cover',
-        marker: '00 / COVER',
-        heading: 'A Unit of\nAttention',
-        body: ['一次失败的尝试，但我仍然认为问题是对的。'],
-        meta: [
-          { label: 'Year', value: '2020' },
-          { label: 'Role', value: 'Conceptual Research' },
-          { label: 'Status', value: 'Unresolved' },
-          { label: 'Archive', value: 'MEM-002' },
-        ],
-      },
-      {
-        kind: 'origin',
-        marker: '01 / ORIGIN',
-        heading: '我们在交易一种没有单位的东西',
-        body: [
-          '整个互联网经济建立在「注意力」之上，但注意力没有单位。我们用时长、点击、曝光来代替它——这些都是代理指标，不是注意力本身。',
-          '没有单位就没有真正的核算。我想试试能不能定义一个。',
-        ],
-        annotation: '用时长衡量注意力，像用体重衡量智力。',
-      },
-      {
-        kind: 'process',
-        marker: '02 / PROCESS',
-        heading: '四次失败的定义',
-        body: [
-          '我尝试过四种定义：基于信息熵的、基于生理唤醒的、基于事后回忆准确率的、基于机会成本的。',
-          '每一种都在某个场景下成立，在另一个场景下崩溃。回忆准确率模型最接近，但它无法测量「当下正在发生」的注意力——只能事后测。',
-        ],
-        plates: [
-          { index: 'PL.02', caption: '四种定义的适用域与崩溃点', seed: 202, variant: 'strata', ratio: 1.6 },
-          { index: 'PL.03', caption: '回忆准确率实验，n=120', seed: 203, variant: 'scatter', ratio: 1.25 },
-        ],
-      },
-      {
-        kind: 'result',
-        marker: '03 / RESULT',
-        heading: '没有结论',
-        body: ['这个项目没有产出可用的单位。它产出的是一份关于「为什么这很难」的说明。'],
-        points: [
-          '4 种定义模型，全部有边界条件',
-          '一篇 32 页的未发表论文',
-          '最终结论：注意力可能本质上不可通约',
-          '状态：未解决',
-        ],
-      },
-      {
-        kind: 'reflection',
-        marker: '04 / REFLECTION',
-        heading: '回望',
-        body: [
-          '五年过去了，我还是没有答案。但这个问题改变了我做每一个产品的方式——如果我无法测量我在索取什么，我至少可以少索取一点。',
-          '有些项目的价值不在于解决问题，而在于让你永远无法回到提出问题之前。',
-        ],
-        annotation: '仍然未解决。大概会一直这样。',
-      },
-      { kind: 'next', marker: '05 / RETURN', heading: '这段记忆到此为止' },
-    ],
-  },
-
-  {
-    id: 'the-weight-of-defaults',
-    cluster: 'yellow',
-    title: 'The Weight of Defaults',
-    year: '2021',
-    role: '研究、写作',
-    summary: '关于默认选项如何在沉默中决定了大多数人的一生。',
-    archiveId: 'MEM-005',
-    offset: [-0.18, -0.1, 0.28],
-    scale: 1.0,
-    chapters: [
-      {
-        kind: 'cover',
-        marker: '00 / COVER',
-        heading: 'The Weight\nof Defaults',
-        body: ['没有人选择默认值，但默认值选择了所有人。'],
-        meta: [
-          { label: 'Year', value: '2021' },
-          { label: 'Role', value: 'Research · Writing' },
-          { label: 'Format', value: 'Essay · Field Study' },
-          { label: 'Archive', value: 'MEM-005' },
-        ],
-      },
-      {
-        kind: 'origin',
-        marker: '01 / ORIGIN',
-        heading: '一个开关，改变了四千万人',
-        body: [
-          '2020 年，某个产品把一个隐私开关的默认状态从「关」改成了「开」。没有公告，没有弹窗。三周后，四千万用户的数据流向发生了改变——其中主动做出选择的人，不到 4%。',
-          '我想知道：当我们说「用户选择了」的时候，我们到底在说什么。',
-        ],
-        annotation: '96% 的人从未打开过那个设置页。',
-        plates: [
-          { index: 'PL.01', caption: '默认值变更前后的行为分布', seed: 601, variant: 'strata', ratio: 1.5 },
-        ],
-      },
-      {
-        kind: 'process',
-        marker: '02 / PROCESS',
-        heading: '我翻了 240 个产品的初始设置',
-        body: [
-          '我记录了 240 个常用产品的全部默认开关——共 3,180 项。然后按「对谁有利」分类：对用户有利的占 31%，对平台有利的占 54%，中性的占 15%。',
-          '更值得注意的是位置：对平台有利的默认项，平均需要 3.2 次点击才能找到；对用户有利的，平均 1.4 次。',
-        ],
-        annotation: '藏起来的东西，往往是不想被改的东西。',
-        plates: [
-          { index: 'PL.02', caption: '3,180 项默认设置的归类与深度', seed: 602, variant: 'grid', ratio: 1.34 },
-          { index: 'PL.03', caption: '「点击深度 vs 受益方」的相关性', seed: 603, variant: 'scatter', ratio: 1.2 },
-        ],
-      },
-      {
-        kind: 'result',
-        marker: '03 / RESULT',
-        heading: '一篇文章，和一份清单',
-        body: ['研究最终成为一篇长文和一份开源清单，供设计师自查自己产品的默认值伦理。'],
-        points: [
-          '3,180 项默认设置完成编目',
-          '清单被 60+ 团队引入设计评审',
-          '两家公司据此公开修改了默认项',
-          '原文被翻译成 5 种语言',
-        ],
-        plates: [
-          { index: 'PL.04', caption: '默认值伦理自查清单，v2', seed: 604, variant: 'field', ratio: 1.62 },
-        ],
-      },
-      {
-        kind: 'reflection',
-        marker: '04 / REFLECTION',
-        heading: '回望',
-        body: [
-          '做完这个研究之后，我再也无法轻松地设置一个默认值了。每一次我都会想：如果 96% 的人永远不会改这里，我凭什么替他们决定？',
-          '设计师最大的权力不在于提供选择，而在于决定什么是「不选择时的样子」。',
-        ],
-        annotation: '默认值是设计师最沉默、也最沉重的一票。',
-      },
-      { kind: 'next', marker: '05 / RETURN', heading: '这段记忆到此为止' },
-    ],
-  },
-
-  {
-    id: 'room-tone',
-    cluster: 'yellow',
-    title: 'Room Tone',
-    year: '2019',
-    role: '声音采集、装置',
-    summary: '收集空房间的声音，发现每个空间都有自己的基频。',
-    archiveId: 'MEM-001',
-    offset: [0.12, 0.16, 0.3],
-    scale: 0.94,
-    chapters: [
-      {
-        kind: 'cover',
-        marker: '00 / COVER',
-        heading: 'Room\nTone',
-        body: ['电影录音师的行规：每到一个场景，先录 30 秒的「空」。'],
-        meta: [
-          { label: 'Year', value: '2019' },
-          { label: 'Role', value: 'Field Recording · Installation' },
-          { label: 'Duration', value: '14 months' },
-          { label: 'Archive', value: 'MEM-001' },
-        ],
-      },
-      {
-        kind: 'origin',
-        marker: '01 / ORIGIN',
-        heading: '没有真正安静的房间',
-        body: [
-          '我从一位录音师那里学到「room tone」这个词——每个空间在无人说话时，仍然在发出声音。空调、墙体、电流、远处的交通，混合成一个只属于这个房间的低频。',
-          '他说：「换了房间不重录 room tone，剪辑时接缝会很明显。观众说不出哪里不对，但就是不对。」',
-        ],
-        annotation: '安静不是没有声音，是一种特定的声音。',
-      },
-      {
-        kind: 'process',
-        marker: '02 / PROCESS',
-        heading: '14 个月，103 个空房间',
-        body: [
-          '我带着一支录音笔，录了 103 个空房间：医院走廊、废弃泳池、图书馆书库、凌晨的地铁站、朋友搬空的旧公寓。每个录 10 分钟。',
-          '做完频谱分析后发现，几乎每个空间都有一个显著的主峰频率。图书馆是 47Hz，泳池是 112Hz。我开始把它们当作房间的「名字」。',
-        ],
-        annotation: '朋友搬空的公寓：63Hz。我录了两次，确认没错。',
-        plates: [
-          { index: 'PL.02', caption: '103 个空间的频谱指纹', seed: 102, variant: 'wave', ratio: 1.85 },
-          { index: 'PL.03', caption: '主峰频率的分布与聚类', seed: 103, variant: 'scatter', ratio: 1.16 },
-        ],
-      },
-      {
-        kind: 'result',
-        marker: '03 / RESULT',
-        heading: '一间可以走进去的档案',
-        body: ['最终成为一个装置：走进一个全白的房间，103 段 room tone 按你的位置缓慢交叉淡入。'],
-        points: [
-          '103 段实地录音，共 17 小时',
-          '在两个城市展出，累计 6 周',
-          '观众平均停留 11 分钟',
-          '全部原始录音已开放下载',
-        ],
-        plates: [
-          { index: 'PL.04', caption: '装置现场，声场分区示意', seed: 104, variant: 'field', ratio: 1.55 },
-        ],
-      },
-      {
-        kind: 'reflection',
-        marker: '04 / REFLECTION',
-        heading: '回望',
-        body: [
-          '这是我做过最不「有用」的项目，却是被问起最多的一个。我想因为它触到了一件所有人都隐约知道、但从未说出口的事：空间是有身体的。',
-          '那间 63Hz 的公寓后来被重新装修了。我手上这 10 分钟，可能是它最后的声音。',
-        ],
-        annotation: '有些档案的意义，要等到对象消失之后才成立。',
-      },
-      { kind: 'next', marker: '05 / RETURN', heading: '这段记忆到此为止' },
-    ],
-  },
-
-
+  B2B_GENERATION,
 ];
 
 export const PROJECTS_BY_CLUSTER = {

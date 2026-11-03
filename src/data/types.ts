@@ -69,6 +69,8 @@ export interface Plate {
     | 'handset' // 手机屏，含底部标签栏
     | 'branch' // 分支 / 版本流向
     | 'swatch'; // 色卡 / 字体样本格
+  /** 真实截图；缺省沿用程序图版。 */
+  image?: { src: string; alt: string };
   /** 宽高比 */
   ratio: number;
 }
