@@ -105,7 +105,7 @@ export function MoteConnections({ materials }: { materials: MoteMaterials }) {
     const instanceBuffer = (geometry.getAttribute('instanceStart') as THREE.InterleavedBufferAttribute).data;
     instanceBuffer.setUsage(THREE.DynamicDrawUsage);
     const material = new LineMaterial({
-      color: '#ffffff', vertexColors: true, linewidth: 1.35, transparent: true, opacity: 0,
+      color: '#ffffff', vertexColors: true, linewidth: 0.6, transparent: true, opacity: 0,
       depthWrite: false, depthTest: false, toneMapped: false,
     });
     const lines = new LineSegments2(geometry, material);
@@ -128,7 +128,7 @@ export function MoteConnections({ materials }: { materials: MoteMaterials }) {
         void main() {
           vDotColor = aColor;
           gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-          gl_PointSize = 8.0 * uPixelRatio;
+          gl_PointSize = 4.0 * uPixelRatio;
         }
       `,
       fragmentShader: `
