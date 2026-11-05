@@ -70,7 +70,8 @@ export function MoteConnections({ materials }: { materials: MoteMaterials }) {
         const index = nodes.length;
         nodes.push({ id, offset, seed: Math.fround(seed), center: new THREE.Vector3(), decorative });
         edges.push([hub, index]);
-        if (decorative) tips.push(index);
+        // Mark every leaf: real sphere centers and decorative branch ends.
+        tips.push(index);
       };
       realOffsets.forEach((offset, index) => addNode(offset, (index * 0.6180339887 + seedOffset) % 1, false));
 
@@ -123,21 +124,21 @@ export function MoteConnections({ materials }: { materials: MoteMaterials }) {
       vertexShader: `
         uniform float uPixelRatio;
         attribute vec3 aColor;
-        varying vec3 vRingColor;
+        varying vec3 vDotColor;
         void main() {
-          vRingColor = aColor;
+          vDotColor = aColor;
           gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
           gl_PointSize = 8.0 * uPixelRatio;
         }
       `,
       fragmentShader: `
         uniform float uOpacity;
-        varying vec3 vRingColor;
+        varying vec3 vDotColor;
         void main() {
           float r = length(gl_PointCoord - 0.5) * 2.0;
-          float ring = smoothstep(0.48, 0.62, r) * (1.0 - smoothstep(0.82, 0.98, r));
-          if (ring < 0.01) discard;
-          gl_FragColor = vec4(vRingColor, ring * uOpacity);
+          float disc = 1.0 - smoothstep(0.82, 0.98, r);
+          if (disc < 0.01) discard;
+          gl_FragColor = vec4(vDotColor, disc * uOpacity);
           #include <colorspace_fragment>
         }
       `,
@@ -179,6 +180,6 @@ export function MoteConnections({ materials }: { materials: MoteMaterials }) {
 
   return <>
     <primitive object={graph.lines} />
-    <points geometry={graph.tipGeometry} material={graph.tipMaterial} frustumCulled={false} renderOrder={2} raycast={() => {}} />
+    <points geometry={graph.tipGeometry} material={graph.tipMaterial} frustumCulled={false} renderOrder={3} raycast={() => {}} />
   </>;
 }
