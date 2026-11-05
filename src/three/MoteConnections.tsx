@@ -92,14 +92,19 @@ export function MoteConnections({ materials }: { materials: MoteMaterials }) {
       }
     });
 
-    const positions = new Float32Array(edges.length * 6);
+    // Keep trunks and the first 70% of each branch neutral. Only the
+    // final section blends into the color of its sphere or decorative tip.
+    const segments = edges.flatMap(([a, b]) => a === 0
+      ? [{ a, b, start: 0, end: 1, colored: false }]
+      : [{ a, b, start: 0, end: 0.7, colored: false }, { a, b, start: 0.7, end: 1, colored: true }]);
+    const positions = new Float32Array(segments.length * 6);
     const geometry = new LineSegmentsGeometry().setPositions(positions);
-    const colors = new Float32Array(edges.length * 6);
+    const colors = new Float32Array(segments.length * 6);
     const clusterColors = Object.fromEntries(CLUSTER_ORDER.map((id) => [id, new THREE.Color(CLUSTERS[id].color)])) as Record<ClusterId, THREE.Color>;
-    const junctionColor = new THREE.Color('#f6f4fa');
-    edges.forEach(([a, b], index) => {
-      (a === 0 ? junctionColor : clusterColors[nodes[a].id]).toArray(colors, index * 6);
-      clusterColors[nodes[b].id].toArray(colors, index * 6 + 3);
+    const lineGray = new THREE.Color('#90969c');
+    segments.forEach(({ b, colored }, index) => {
+      lineGray.toArray(colors, index * 6);
+      (colored ? clusterColors[nodes[b].id] : lineGray).toArray(colors, index * 6 + 3);
     });
     geometry.setColors(colors);
     const instanceBuffer = (geometry.getAttribute('instanceStart') as THREE.InterleavedBufferAttribute).data;
@@ -143,7 +148,7 @@ export function MoteConnections({ materials }: { materials: MoteMaterials }) {
         }
       `,
     });
-    return { nodes, hubs, edges, tips, positions, geometry, instanceBuffer, material, lines, tipGeometry, tipMaterial };
+    return { nodes, hubs, segments, tips, positions, geometry, instanceBuffer, material, lines, tipGeometry, tipMaterial };
   }, []);
 
   useEffect(() => () => {
@@ -159,9 +164,13 @@ export function MoteConnections({ materials }: { materials: MoteMaterials }) {
     const junction = graph.nodes[0].center.set(0, 0, 0);
     graph.hubs.forEach((index) => junction.add(graph.nodes[index].center));
     junction.divideScalar(graph.hubs.length);
-    graph.edges.forEach(([a, b], index) => {
-      graph.nodes[a].center.toArray(graph.positions, index * 6);
-      graph.nodes[b].center.toArray(graph.positions, index * 6 + 3);
+    graph.segments.forEach(({ a, b, start, end }, index) => {
+      const from = graph.nodes[a].center, to = graph.nodes[b].center;
+      for (let axis = 0; axis < 3; axis++) {
+        const origin = from.getComponent(axis), span = to.getComponent(axis) - origin;
+        graph.positions[index * 6 + axis] = origin + span * start;
+        graph.positions[index * 6 + 3 + axis] = origin + span * end;
+      }
     });
     graph.instanceBuffer.needsUpdate = true;
     graph.material.resolution.set(state.size.width, state.size.height);
