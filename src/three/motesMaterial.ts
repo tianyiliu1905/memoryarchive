@@ -256,7 +256,7 @@ uniform float uPixelRatio;
        没有取更大的值，是因为光斑胀到 1.6 倍以上时，密集处的
        弥散区会连成一大片，失掉「一颗一颗」的形态。 */
     size *= mix(0.6, 1.44, breathe);
-    size *= mix(1.0, 2.45, uFocus);
+    size *= mix(1.0, 3.1, uFocus);
     size *= 1.0 + hot * 0.55;
     /* 悬停的光斑放大——不再依赖 uFocus，盆视角下也要有反馈。
        当前项与消退项各算一次，取较大者：切换悬停的瞬间，
