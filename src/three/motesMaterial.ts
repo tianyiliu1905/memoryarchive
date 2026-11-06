@@ -307,6 +307,7 @@ export const motesFragmentShader = /* glsl */ `
 
   uniform vec3 uColor;
   uniform float uOpacity;
+  uniform float uPixelRatio;
 
   varying float vBright;
   varying float vSeed;
@@ -317,94 +318,43 @@ export const motesFragmentShader = /* glsl */ `
   varying float vTint;
   varying float vTrail;
 
+  // Stable paper grain: no time-dependent random values or flickering pixels.
+  float grainHash(vec2 p) {
+    vec3 q = fract(vec3(p.xyx) * 0.1031);
+    q += dot(q, q.yzx + 33.33);
+    return fract((q.x + q.y) * q.z);
+  }
+
+  float softNoise(vec2 p) {
+    vec2 cell = floor(p), f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    return mix(mix(grainHash(cell), grainHash(cell + vec2(1.0, 0.0)), f.x),
+               mix(grainHash(cell + vec2(0.0, 1.0)), grainHash(cell + vec2(1.0)), f.x), f.y);
+  }
+
   void main() {
     vec2 uv = gl_PointCoord - 0.5;
     float r = length(uv) * 2.0;   // 归一化到 0~1，1 即精灵边缘
     if (r > 1.0) discard;
 
-    /* ---- 多段径向渐变 ----
-
-       原本是 3 段（0/25/60/100%），外缘那一段要从 0.2 直落到 0，
-       跨度只有 40% 半径，衰减太快，光斑边界仍然「看得见」。
-
-       现在拆成 6 段，核心保持原来的密度，把预算全花在外缘：
-       后三段覆盖 55%~100% 的半径，不透明度却只降一点点，
-       形成一条长而极淡的尾巴——边界溶进纸里，而不是收在某处。
-
-       色标整体抬高了，尤其是外缘的后几档。配合精灵尺寸的增大，
-       弥散范围因此明显外扩，相邻光斑的弥散区会彼此侵入。
-       叠加混合下重叠处会自然累出一块更亮的区域，整群因此连成
-       一片流动的光，而不是几颗各自为政的珠子。
-
-       两套色标（悬停 / 未悬停）依旧只差一个整体倍率，
-       用 vHover 插值。vHover 现在是连续量（见顶点着色器里的
-       uHoverAmount），所以亮起与消退都是渐变的。
-
-       再给它套一条 smoothstep：线性的 amount 在消退末尾会
-       「戛然而止」，S 曲线把首尾都压平，收尾更像自然熄灭。 */
-
-    /* 悬停态色标：0 / 12 / 28 / 42 / 55 / 72 / 100%
-
-       整体比上一版又压下来一截。上一版为了「让弥散区能连上」
-       把色标抬高，但那是在 NormalBlending 的经验下估的值；
-       改成预乘 alpha 叠加后，重叠处的不透明度是真的会累加，
-       同样的色标叠三四层就压出了深色块。
-
-       现在单层更淡，叠加后才刚好——这才是叠加混合下该有的
-       配法：单层预留余地，让重叠去填。 */
-    const float F0 = 0.72;
-    const float F1 = 0.58;
-    const float F2 = 0.4;
-    const float F3 = 0.27;
-    const float F4 = 0.17;
-    const float F5 = 0.085;
-
-    // 未悬停态：整体再压低，但外缘几档压得比核心少——
-    // 即使不悬停，弥散的尾巴也要足够明显，邻居之间才连得上
-    const float D0 = 0.34;
-    const float D1 = 0.28;
-    const float D2 = 0.2;
-    const float D3 = 0.145;
-    const float D4 = 0.095;
-    const float D5 = 0.05;
-
+    // Broad pigment bloom with an irregular, fully feathered perimeter.
+    // The center stays denser; the outer haze dissolves into the paper.
+    vec2 seedOffset = vec2(vSeed * 71.3, vSeed * 43.7);
+    float cloud = softNoise(uv * 9.0 + seedOffset);
+    float dispersedRadius = max(0.0, r + (cloud - 0.5) * 0.13 * smoothstep(0.1, 0.7, r));
+    float bloom = exp(-4.6 * dispersedRadius * dispersedRadius);
+    bloom *= 1.0 - smoothstep(0.64, 1.0, r);
     float hv = smoothstep(0.0, 1.0, clamp(vHover, 0.0, 1.0));
+    float a = bloom * mix(0.34, 0.68, hv);
 
-    float s0 = mix(D0, F0, hv);
-    float s1 = mix(D1, F1, hv);
-    float s2 = mix(D2, F2, hv);
-    float s3 = mix(D3, F3, hv);
-    float s4 = mix(D4, F4, hv);
-    float s5 = mix(D5, F5, hv);
-
-    /* 分段线性插值。段越靠外越长、落差越小：
-         [0,  12%] : s0 → s1   核心，几乎不衰减
-         [12, 28%] : s1 → s2
-         [28, 42%] : s2 → s3
-         [42, 55%] : s3 → s4
-         [55, 72%] : s4 → s5   尾巴起点
-         [72,100%] : s5 → 0    最长的一段，落差最小 */
-    float a;
-    if (r < 0.12) {
-      a = mix(s0, s1, r / 0.12);
-    } else if (r < 0.28) {
-      a = mix(s1, s2, (r - 0.12) / 0.16);
-    } else if (r < 0.42) {
-      a = mix(s2, s3, (r - 0.28) / 0.14);
-    } else if (r < 0.55) {
-      a = mix(s3, s4, (r - 0.42) / 0.13);
-    } else if (r < 0.72) {
-      a = mix(s4, s5, (r - 0.55) / 0.17);
-    } else {
-      /* 末段再乘一次淡出，让最外圈趋近于 0，彻底不留边界。
-
-         系数从 0.35 提到 1.0：外缘色标抬高后，若还用原来那条
-         温和的曲线，精灵边界处会剩下一层能看出来的底，十几颗
-         光斑叠在一起就会露出一圈圈圓边。平方衰减把最后那点余量
-         压到 0，弥散范围却因为前面几段抬高而依旧外扩。 */
-      float u = (r - 0.72) / 0.28;
-      a = mix(s5, 0.0, u) * (1.0 - u * u);
-    }
+    // Fine stippling and small paper pores, shared by a mote's trail layers
+    // so overlapping sprites retain texture instead of averaging it away.
+    vec2 paper = gl_FragCoord.xy / max(uPixelRatio, 1.0);
+    float fineGrain = grainHash(floor(paper / 1.15) + seedOffset);
+    float pores = grainHash(floor(paper / 2.1) + seedOffset + 19.7);
+    float pigment = mix(0.3, 1.7, fineGrain);
+    pigment *= mix(0.38, 1.0, smoothstep(0.08, 0.36, pores));
+    a *= pigment * mix(0.86, 1.14, cloud);
 
     a *= vBright * uOpacity;
 
