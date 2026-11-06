@@ -101,7 +101,7 @@ export function MoteConnections({ materials }: { materials: MoteMaterials }) {
     const geometry = new LineSegmentsGeometry().setPositions(positions);
     const colors = new Float32Array(segments.length * 6);
     const clusterColors = Object.fromEntries(CLUSTER_ORDER.map((id) => [id, new THREE.Color(CLUSTERS[id].color)])) as Record<ClusterId, THREE.Color>;
-    const lineGray = new THREE.Color('#90969c');
+    const lineGray = new THREE.Color('#aeb4ba');
     segments.forEach(({ b, colored }, index) => {
       lineGray.toArray(colors, index * 6);
       (colored ? clusterColors[nodes[b].id] : lineGray).toArray(colors, index * 6 + 3);
@@ -182,8 +182,9 @@ export function MoteConnections({ materials }: { materials: MoteMaterials }) {
     tipPosition.needsUpdate = true;
     const { depth, awakened } = useArchive.getState();
     const visible = awakened && (depth === 'basin' || depth === 'cluster' || depth === 'surfacing');
-    graph.material.opacity = THREE.MathUtils.damp(graph.material.opacity, visible ? 0.62 : 0, 3, Math.min(delta, 0.05));
-    graph.tipMaterial.uniforms.uOpacity.value = graph.material.opacity;
+    graph.material.opacity = THREE.MathUtils.damp(graph.material.opacity, visible ? 0.48 : 0, 3, Math.min(delta, 0.05));
+    // Keep the 4px dots legible while the connecting strokes become lighter.
+    graph.tipMaterial.uniforms.uOpacity.value = graph.material.opacity * (0.62 / 0.48);
     graph.tipMaterial.uniforms.uPixelRatio.value = Math.min(window.devicePixelRatio, 2);
   });
 

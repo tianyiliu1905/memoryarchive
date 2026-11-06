@@ -354,7 +354,10 @@ export const motesFragmentShader = /* glsl */ `
     float pores = grainHash(floor(paper / 2.1) + seedOffset + 19.7);
     float pigment = mix(0.3, 1.7, fineGrain);
     pigment *= mix(0.38, 1.0, smoothstep(0.08, 0.36, pores));
-    a *= pigment * mix(0.86, 1.14, cloud);
+    // Pack more pigment into the center while leaving the diffuse edge airy.
+    float coreDensity = 1.0 - smoothstep(0.12, 0.52, r);
+    pigment = mix(pigment, 1.08 + fineGrain * 0.32, coreDensity * 0.85);
+    a *= pigment * mix(0.86, 1.14, cloud) * (1.0 + coreDensity * 0.55);
 
     a *= vBright * uOpacity;
 
