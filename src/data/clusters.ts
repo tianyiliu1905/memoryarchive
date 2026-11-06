@@ -21,7 +21,7 @@ export const CLUSTERS: Record<ClusterId, MemoryCluster> = {
   },
   yellow: {
     id: 'yellow',
-    title: '研究 / 未完成的追问',
+    title: '设计研究',
     label: 'Inquiry',
     whisper: '没有结论，但一直在想的事。',
     color: '#ffd400',
